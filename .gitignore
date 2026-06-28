@@ -27,7 +27,6 @@ vite.config.ts.timestamp-*
 # IDE
 .vscode/
 .markdownlint.jsonc
-
 .prettierrc
 
 # Lockfiles
