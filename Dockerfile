@@ -6,7 +6,7 @@ COPY package*.json .
 RUN npm install
 COPY . .
 RUN npm run build
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 
 FROM gcr.io/distroless/nodejs20-debian12 AS runner
