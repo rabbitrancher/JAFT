@@ -1,4 +1,4 @@
-export const CATEGORIES = [
+export const BASE_CATEGORIES = [
 	// Income
 	"Paycheck",
 	"Reimbursement",
@@ -46,4 +46,4 @@ export const CATEGORIES = [
 	"Miscellaneous",
 ] as const;
 
-export type Category = (typeof CATEGORIES)[number];
+export type Category = (typeof BASE_CATEGORIES)[number];
