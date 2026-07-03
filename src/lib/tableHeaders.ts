@@ -1,3 +1,5 @@
+import { toTitleCase } from "./utils/format";
+
 /**
  * Represents a single table column header
  * */
@@ -17,11 +19,7 @@ export type Header = {
  * @example "category_id" -> "Category Id"
  */
 function formatLabel(key: string): string {
-	return key
-		.replaceAll("_", " ")
-		.split(" ")
-		.map((word) => word.charAt(0).toUpperCase() + word.substring(1))
-		.join(" ");
+	return toTitleCase(key.replaceAll("_", " "));
 }
 
 /**
