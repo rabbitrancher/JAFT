@@ -28,18 +28,3 @@
 		</tbody>
 	</table>
 {/if}
-
-<style>
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		margin-top: 1rem;
-	}
-
-	th,
-	td {
-		text-align: left;
-		padding: 0.5rem;
-		border-bottom: 1px solid #ddd;
-	}
-</style>
