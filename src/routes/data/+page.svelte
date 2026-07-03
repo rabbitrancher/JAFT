@@ -1,5 +1,23 @@
 <script lang="ts">
+	import { DEFAULT_SELECTED_HEADERS } from "$lib/tableHeaders.js";
+	import { toTitleCase } from "$lib/utils/format.js";
+	import { onMount } from "svelte";
+
 	let { data } = $props();
+
+	// default visibleHeaders
+	let headers = $state(DEFAULT_SELECTED_HEADERS);
+
+	// on page load, if there's no local storage for the table headers use the default values
+	onMount(() => {
+		const saved = localStorage.getItem("table_headers");
+		if (saved) {
+			let parsed = JSON.parse(saved);
+			if (parsed.length > 0) {
+				headers = parsed;
+			}
+		}
+	});
 </script>
 
 <h1>Your Entries</h1>
@@ -10,36 +28,33 @@
 	<table>
 		<thead>
 			<tr>
-				<th>Date</th>
-				<th>Amount</th>
-				<th>Description</th>
-				<th>Category</th>
+				{#each headers as possibleHeader (possibleHeader.header.key)}
+					{#if possibleHeader.selected}
+						<th>{possibleHeader.header.label}</th>
+					{/if}
+				{/each}
 			</tr>
 		</thead>
 		<tbody>
 			{#each data.entries as entry (entry.id)}
 				<tr>
-					<td>{new Date(entry.date).toLocaleDateString()}</td>
-					<td>${entry.amount.toFixed(2)}</td>
-					<td>{entry.description}</td>
-					<td>{entry.category}</td>
+					{#each headers as possibleHeader (possibleHeader.header.key)}
+						{#if possibleHeader.selected}
+							<td>
+								{#if possibleHeader.header.key === "date"}
+									{new Date(entry.date).toLocaleDateString()}
+								{:else if possibleHeader.header.key === "amount"}
+									${entry.amount.toFixed(2)}
+								{:else if possibleHeader.header.key === "type"}
+									{toTitleCase(entry.type)}
+								{:else}
+									{entry[possibleHeader.header.key as keyof typeof entry]}
+								{/if}
+							</td>
+						{/if}
+					{/each}
 				</tr>
 			{/each}
 		</tbody>
 	</table>
 {/if}
-
-<style>
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		margin-top: 1rem;
-	}
-
-	th,
-	td {
-		text-align: left;
-		padding: 0.5rem;
-		border-bottom: 1px solid #ddd;
-	}
-</style>

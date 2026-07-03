@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import favicon from '$lib/assets/favicon.svg';
-	import '$lib/styles/app.css';
+	import { resolve } from "$app/paths";
+	import favicon from "$lib/assets/favicon.svg";
+	import "$lib/styles/app.css";
 
 	let { children } = $props();
-	import Settings from '@lucide/svelte/icons/settings';
+	import { Settings } from "@lucide/svelte/icons";
 </script>
 
 <svelte:head>
@@ -13,11 +13,11 @@
 </svelte:head>
 <nav>
 	<div style="display: flex; gap: 30px;">
-		<a class="nav-a" href={resolve('/')}>Home</a>
-		<a class="nav-a" href={resolve('/entry')}>Entry</a>
-		<a class="nav-a" href={resolve('/data')}>View my Data</a>
+		<a class="nav-a" href={resolve("/")}>Home</a>
+		<a class="nav-a" href={resolve("/entry")}>Entry</a>
+		<a class="nav-a" href={resolve("/data")}>View my Data</a>
 	</div>
-	<a class="nav-a" href={resolve('/settings')} title="Settings">
+	<a class="nav-a" href={resolve("/settings")} title="Settings">
 		<Settings />
 	</a>
 </nav>
