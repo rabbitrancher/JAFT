@@ -10,7 +10,7 @@
 
 	// on page load, if there's no local storage for the table headers use the default values
 	onMount(() => {
-		const saved = localStorage.getItem("tableHeaders");
+		const saved = localStorage.getItem("table_headers");
 		if (saved) {
 			let parsed = JSON.parse(saved);
 			if (parsed.length > 0) {
