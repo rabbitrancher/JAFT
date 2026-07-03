@@ -45,3 +45,27 @@ export const DEFAULT_HEADERS: Header[] = [
 	"amount",
 	"description",
 ].map((key) => ({ key, label: formatLabel(key) }));
+
+/**
+ * Represents a table header and its potential to be selected in the settings menu or not
+ */
+export type HeaderOption = {
+	/**
+	 * The actual header object
+	 */
+	header: Header;
+	/**
+	 * Whether or not this header's visibility was toggled on or off in the settings menu
+	 */
+	selected: boolean;
+};
+
+/**
+ * The default headers selected in the settings before the user customizes them
+ */
+export const DEFAULT_SELECTED_HEADERS: HeaderOption[] = ALL_HEADERS.map(
+	(header) => ({
+		header,
+		selected: DEFAULT_HEADERS.some((h) => h.key === header.key),
+	}),
+);
