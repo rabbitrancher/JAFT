@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { DEFAULT_HEADERS } from "$lib/tableHeaders.js";
+	import { DEFAULT_SELECTED_HEADERS } from "$lib/tableHeaders.js";
 	import { toTitleCase } from "$lib/utils/format.js";
 	import { onMount } from "svelte";
 
 	let { data } = $props();
 
 	// default visibleHeaders
-	let visibleHeaders = $state(DEFAULT_HEADERS);
+	let headers = $state(DEFAULT_SELECTED_HEADERS);
 
 	// on page load, if there's no local storage for the table headers use the default values
 	onMount(() => {
@@ -14,7 +14,7 @@
 		if (saved) {
 			let parsed = JSON.parse(saved);
 			if (parsed.length > 0) {
-				visibleHeaders = parsed;
+				headers = parsed;
 			}
 		}
 	});
@@ -28,26 +28,30 @@
 	<table>
 		<thead>
 			<tr>
-				{#each visibleHeaders as header (header.key)}
-					<th>{header.label}</th>
+				{#each headers as possibleHeader (possibleHeader.header.key)}
+					{#if possibleHeader.selected}
+						<th>{possibleHeader.header.label}</th>
+					{/if}
 				{/each}
 			</tr>
 		</thead>
 		<tbody>
 			{#each data.entries as entry (entry.id)}
 				<tr>
-					{#each visibleHeaders as header (header)}
-						<td>
-							{#if header.key === "date"}
-								{new Date(entry.date).toLocaleDateString()}
-							{:else if header.key === "amount"}
-								${entry.amount.toFixed(2)}
-							{:else if header.key === "type"}
-								{toTitleCase(entry.type)}
-							{:else}
-								{entry[header.key as keyof typeof entry]}
-							{/if}
-						</td>
+					{#each headers as possibleHeader (possibleHeader.header.key)}
+						{#if possibleHeader.selected}
+							<td>
+								{#if possibleHeader.header.key === "date"}
+									{new Date(entry.date).toLocaleDateString()}
+								{:else if possibleHeader.header.key === "amount"}
+									${entry.amount.toFixed(2)}
+								{:else if possibleHeader.header.key === "type"}
+									{toTitleCase(entry.type)}
+								{:else}
+									{entry[possibleHeader.header.key as keyof typeof entry]}
+								{/if}
+							</td>
+						{/if}
 					{/each}
 				</tr>
 			{/each}
