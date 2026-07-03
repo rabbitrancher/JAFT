@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { DEFAULT_HEADERS } from "$lib/tableHeaders.js";
+	import { toTitleCase } from "$lib/utils/format.js";
 	import { onMount } from "svelte";
 
 	let { data } = $props();
@@ -41,6 +42,8 @@
 								{new Date(entry.date).toLocaleDateString()}
 							{:else if header.key === "amount"}
 								${entry.amount.toFixed(2)}
+							{:else if header.key === "type"}
+								${toTitleCase(entry.type)}
 							{:else}
 								{entry[header.key as keyof typeof entry]}
 							{/if}

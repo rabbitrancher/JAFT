@@ -3,6 +3,7 @@ import { db } from "$lib/server/db";
 import { entries, categories } from "$lib/server/db/schema";
 import { CATEGORIES } from "$lib/categories";
 import type { Actions } from "./$types";
+import { toSentenceCase, toTitleCase } from "$lib/utils/format";
 
 export const actions: Actions = {
 	/**
@@ -21,19 +22,12 @@ export const actions: Actions = {
 		const date = String(formData.get("date"));
 
 		// Title Case the category input
-		const categoryName = String(formData.get("category"))
-			.split(" ")
-			.map((word) => word.charAt(0).toUpperCase() + word.substring(1))
-			.join(" ");
+		const categoryName = toTitleCase(String(formData.get("category")));
 
 		// Sentence case the description input
-		const description =
-			String(formData.get("description") || "")
-				.charAt(0)
-				.toUpperCase() +
-			String(formData.get("description") || "")
-				.slice(1)
-				.toLowerCase();
+		const description = toSentenceCase(
+			String(formData.get("description") || ""),
+		);
 
 		// validate category exists in DB, note that categories are seeded from CATEGORIES on startup
 		const db_category = await db
