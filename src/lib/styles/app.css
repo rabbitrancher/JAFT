@@ -111,6 +111,12 @@ nav {
 	gap: var(--gap-button-row);
 }
 
+.center-inside {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 /* -- Buttons -- */
 .button {
 	display: inline-block;
@@ -147,6 +153,13 @@ nav {
 
 .pill:hover:not(.active) {
 	background: var(--bg-pill-hover);
+}
+
+.pill-icon {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 0.25rem 1rem;
 }
 
 /* -- Forms -- */
