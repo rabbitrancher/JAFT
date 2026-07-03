@@ -43,7 +43,7 @@
 							{:else if header.key === "amount"}
 								${entry.amount.toFixed(2)}
 							{:else if header.key === "type"}
-								${toTitleCase(entry.type)}
+								{toTitleCase(entry.type)}
 							{:else}
 								{entry[header.key as keyof typeof entry]}
 							{/if}
