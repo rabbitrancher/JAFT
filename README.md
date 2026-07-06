@@ -15,7 +15,8 @@ income!) quickly and intuitively. The current stored fields are:
 - **Type**: expense or income
 - **Category**: A predefined category for the entry, with possibilities determined by the values in
   [`src/lib/categories.ts`](src/lib/categories.ts). A fuzzy search (thanks fuse!) helps you see what
-  the possible categories are when you get to make an entry.
+  the possible categories are when you get to make an entry. If you enable dynamic categories in
+  settings, you can also add new ones on the fly.
 - **Description**: Something a bit more detailed than 'Category', but could still come up again.
   Like specifying which brand of gas station you went to. And there's a fuzzy search here too don't
   worry.
@@ -34,6 +35,12 @@ JABA is available as a multi-platform Docker image (`linux/amd64` and `linux/arm
 run on pretty much anything. [QEMU](https://www.qemu.org/) helped make that possible, so kudos to
 them.
 
+Two image tags are available:
+
+- `latest` — stable releases, what you probably want
+- `dev` — built automatically on every merge to the dev branch, so it's newer but potentially
+  rougher around the edges
+
 #### Prerequisites
 
 - Docker and Docker Compose installed
@@ -46,35 +53,35 @@ them.
    I think technically you could skip this step, but then you might end up with some wacky
    permissions so you might as well run it
 
-  ```bash
-  mkdir -p /path/to/storage
-  touch /path/to/storage/budget.db
-  ```
+```bash
+   mkdir -p /path/to/storage
+   touch /path/to/storage/budget.db
+```
 
 2. Add to your `docker-compose.yml`:
 
-  ```yaml
-  services:
-    jaba:
-      container_name: jaba
-      image: rabbitrancher/jaba:latest
-      ports:
-        - '8389:3000'
-      environment:
-        - ORIGIN=http://your-ip:8389
-      volumes:
-        - /path/to/storage/budget.db:/app/budget.db
-      restart: unless-stopped
-  ```
+```yaml
+services:
+  jaba:
+    container_name: jaba
+    image: rabbitrancher/jaba:latest
+    ports:
+      - "8389:3000"
+    environment:
+      - ORIGIN=http://your-ip:8389
+    volumes:
+      - /path/to/storage/budget.db:/app/budget.db
+    restart: unless-stopped
+```
 
 3. Pull and start:
 
-  ```bash
-  docker compose up -d
-  ```
+```bash
+   docker compose up -d
+```
 
-  The app will be available at `http://your-ip:8389`. On first start, migrations and category seeding
-  will run automatically, so there should be no manual setup needed.
+The app will be available at `http://your-ip:8389`. On first start, migrations and category
+seeding will run automatically, so there should be no manual setup needed.
 
 #### Updating
 
