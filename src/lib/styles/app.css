@@ -55,6 +55,7 @@
 	--padding-pill: 0.4rem 1rem;
 	--padding-field: 0.4rem;
 	--padding-cell: 0.5rem;
+	--padding-icon: 0.25rem;
 
 	--gap-hero: 1rem;
 	--gap-button-row: 7rem;
@@ -115,6 +116,10 @@ nav {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+.hidden {
+	visibility: hidden;
 }
 
 /* -- Buttons -- */
@@ -227,6 +232,10 @@ textarea {
 	color: var(--error);
 }
 
+.clickable-icon {
+	cursor: pointer;
+}
+
 /* -- Table -- */
 table {
 	width: 100%;
@@ -239,6 +248,17 @@ td {
 	text-align: left;
 	padding: var(--padding-cell);
 	border-bottom: 1px solid var(--border-subtle);
+}
+
+td.edit {
+	background-color: var(--dark-3);
+	color: var(--accent-2);
+}
+
+td.icon-col {
+	text-align: center;
+	padding: var(--padding-icon);
+	width: 1%;
 }
 
 /* -- Settings -- */
