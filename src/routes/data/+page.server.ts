@@ -19,6 +19,7 @@ export async function load() {
 			amount: entries.amount,
 			type: entries.type,
 			category: categories.name,
+			notes: entries.notes,
 		})
 		.from(entries)
 		.leftJoin(categories, eq(entries.category_id, categories.id))
