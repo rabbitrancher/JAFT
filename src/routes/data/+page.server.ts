@@ -3,8 +3,7 @@ import { entries, categories } from "$lib/server/db/schema";
 import { asc, desc, eq, isNotNull } from "drizzle-orm";
 
 /**
- * Retrieves all entries from the database, including their corresponding category names,
- * sorted by date in descending order.
+ * Retrieves all entries from the database, including their corresponding category names, sorted by date in descending order.
  * Also returns all possible categories and previous descriptions for fuzzy assist during editing.
  *
  * @returns An array of objects containing entry information, an array of strings of all stored category names, and an array of strings storing all past description.

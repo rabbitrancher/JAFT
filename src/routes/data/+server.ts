@@ -45,6 +45,9 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	}
 	if (updates.amount) {
 		safeUpdates.amount = Number(updates.amount);
+		if (Number(safeUpdates.amount) < 0) {
+			return json({ error: "Can't have a negative amount" }, { status: 400 });
+		}
 	}
 	if (updates.type === "income" || updates.type === "expense") {
 		safeUpdates.type = updates.type;
