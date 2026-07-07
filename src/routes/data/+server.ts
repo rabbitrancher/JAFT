@@ -85,3 +85,20 @@ export const PATCH: RequestHandler = async ({ request }) => {
 
 	return json({ success: true });
 };
+
+/**
+ * Deletes an existing entry in the database.
+ *
+ * @returns { success: true } on success
+ * @returns { error: string } with status 400 on validation failure
+ */
+export const DELETE: RequestHandler = async ({ request }) => {
+	const body = (await request.json()) as { id: number };
+	const { id } = body;
+	if (!id || typeof id !== "number") {
+		return json({ error: "Invalid id" }, { status: 400 });
+	}
+
+	await db.delete(entries).where(eq(entries.id, id));
+	return json({ success: true });
+};

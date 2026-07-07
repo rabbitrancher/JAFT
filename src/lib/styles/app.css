@@ -261,6 +261,11 @@ td.icon-col {
 	width: 1%;
 }
 
+td.top-bot-border {
+	border-top: 1px solid var(--border-subtle);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
 /* -- Settings -- */
 .settings-section {
 	background-color: var(--bg-elevated);

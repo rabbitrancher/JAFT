@@ -2,16 +2,35 @@
 	import { DEFAULT_SELECTED_HEADERS } from "$lib/tableHeaders.js";
 	import { toTitleCase } from "$lib/utils/format.js";
 	import { onMount } from "svelte";
-	import { Pencil, SquareCheckBig } from "@lucide/svelte/icons";
+	import { Pencil, SquareCheckBig, Trash2, CircleCheckBig } from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
 	import Fuse from "fuse.js";
 
 	let { data } = $props();
 
+	/**
+	 * Stores the configuration of the table headers, including which headers are currently selected for display.
+	 * This is initialized with the default selected headers.
+	 */
 	let possibleHeaders = $state(DEFAULT_SELECTED_HEADERS);
+
+	/**
+	 * Stores whether the enforcement of categories is currently enabled or disabled.
+	 * When enabled, users can only select from existing categories when editing a row.
+	 * When disabled, users can enter a new category when editing a row.
+	 */
 	let categoriesEnforced = $state<boolean>(true);
+
+	/**
+	 * Stores whether the description suggestions should currently be shown or not.
+	 * Description suggestions are a list of previously entered descriptions that match the current input.
+	 */
 	let showDescSuggestions = $state(false);
 
+	/**
+	 * Creates a Fuse.js instance for searching through the list of previously entered descriptions.
+	 * This Fuse instance is used to generate the description suggestions.
+	 */
 	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
 
 	/**
@@ -67,7 +86,11 @@
 	 * Saves any previously edited row first.
 	 */
 	async function editLine(entry: (typeof data.entries)[number]) {
-		await doneEdit();
+		const success = await doneEdit();
+		// if the previous edit was not a success, do not switch to a new line for editing
+		if (!success) {
+			return;
+		}
 		curEditId = entry.id;
 		editValues = {
 			date: entry.date,
@@ -80,12 +103,21 @@
 	}
 
 	/**
+	 * Contains the error message for if a entry was not saved upon edit
+	 */
+	let saveError = $state<string | null>(null);
+
+	/**
 	 * Saves the currently edited row to the server, then exits edit mode.
 	 * Passes the current categories enforcement setting so the server knows whether to allow new categories or reject them.
+	 * @returns true if the edit was successful, or false if there was an error
 	 */
-	async function doneEdit() {
-		if (curEditId === null || editValues === null) return;
-		await fetch("/data", {
+	async function doneEdit(): Promise<boolean> {
+		// if this was called when nothing was selected, it's considered a pass
+		if (curEditId === null || editValues === null) {
+			return true;
+		}
+		const result = await fetch("/data", {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -94,10 +126,74 @@
 				allowNewCategories: !categoriesEnforced,
 			}),
 		});
-		// reload the table so values are updated
+		const json = await result.json();
+		if (!result.ok) {
+			saveError = json.error;
+			return false;
+		}
 		await invalidateAll();
+		resetLines();
+		return true;
+	}
+
+	/**
+	 * The ID of the row that could be deleted if confirmDelete() is called, corresponding to the SQL id.
+	 */
+	let pendingDeleteId = $state<number | null>(null);
+	/**
+	 * Contains the error message for if a entry was not saved upon edit
+	 */
+	let deleteError = $state<string | null>(null);
+
+	/**
+	 * Enables deletion of the currently edited row.
+	 * Sets a timeout to disable deletion after 3 seconds unless attempted again.
+	 */
+	function enableDelete() {
+		pendingDeleteId = curEditId;
+		// after 3 seconds, disable delete unless attempted again
+		setTimeout(() => {
+			pendingDeleteId = null;
+		}, 3000);
+	}
+
+	/**
+	 * Confirms deletion of the currently edited row.
+	 * Sends a DELETE request to the server with the ID of the row to be deleted.
+	 * If the deletion is successful, invalidates all data and resets edit/delete state.
+	 * @returns true if the deletion was successful, or false if there was an error
+	 */
+	async function confirmDelete(): Promise<boolean> {
+		if (curEditId === null || editValues === null) {
+			return true;
+		}
+		const result = await fetch("/data", {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				id: pendingDeleteId,
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			deleteError = json.error;
+			return false;
+		}
+		await invalidateAll();
+		resetLines();
+		return true;
+	}
+
+	/**
+	 * Resets all edit/delete-related state variables to their default null values.
+	 * This function is called after a successful edit or delete operation.
+	 */
+	function resetLines() {
 		curEditId = null;
 		editValues = null;
+		saveError = null;
+		pendingDeleteId = null;
+		deleteError = null;
 	}
 </script>
 
@@ -127,11 +223,14 @@
 		<tbody>
 			{#each data.entries as entry (entry.id)}
 				<tr>
-					<td class="edit-col">
+					<td class:icon-col={!saveError}>
 						{#if entry.id !== curEditId}
 							<Pencil class="clickable-icon" size={16} onclick={() => editLine(entry)} />
 						{:else}
 							<SquareCheckBig class="clickable-icon" size={16} onclick={() => doneEdit()} />
+							{#if saveError}
+								<span class="error">{saveError}</span>
+							{/if}
 						{/if}
 					</td>
 					{#each possibleHeaders as header (header.header.key)}
@@ -192,6 +291,23 @@
 							</td>
 						{/if}
 					{/each}
+
+					{#if entry.id === curEditId && editValues}
+						<td class="edit-col top-bot-border">
+							{#if deleteError}
+								<span class="error">{deleteError}</span>
+							{/if}
+							{#if pendingDeleteId}
+								<CircleCheckBig
+									class="clickable-icon error"
+									size={16}
+									onclick={() => confirmDelete()}
+								/>
+							{:else}
+								<Trash2 class="clickable-icon" size={16} onclick={() => enableDelete()} />
+							{/if}
+						</td>
+					{/if}
 				</tr>
 			{/each}
 		</tbody>
