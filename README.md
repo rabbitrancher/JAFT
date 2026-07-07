@@ -37,9 +37,8 @@ them.
 
 Two image tags are available:
 
-- `latest` — stable releases, what you probably want
-- `dev` — built automatically on every merge to the dev branch, so it's newer but potentially
-  rougher around the edges
+- `latest` - stable releases, what you probably want
+- `dev` - built automatically on every merge to the dev branch, so it's cutting-edge but might have bugs and such
 
 #### Prerequisites
 
