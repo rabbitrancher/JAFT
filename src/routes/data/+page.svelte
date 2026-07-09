@@ -1,8 +1,15 @@
 <script lang="ts">
-	import { DEFAULT_SELECTED_HEADERS } from "$lib/tableHeaders.js";
+	import { DEFAULT_SELECTED_HEADERS, type ValidColumnKey } from "$lib/tableHeaders.js";
 	import { toTitleCase } from "$lib/utils/format.js";
 	import { onMount } from "svelte";
-	import { Pencil, SquareCheckBig, Trash2, CircleCheckBig } from "@lucide/svelte/icons";
+	import {
+		ChevronDown,
+		ChevronUp,
+		CircleCheckBig,
+		Pencil,
+		SquareCheckBig,
+		Trash2,
+	} from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
 	import Fuse from "fuse.js";
 
@@ -70,15 +77,27 @@
 	});
 
 	/**
-	 * Stores the values of a row on the table
+	 * Maps a given key to its corresponding field type.
+	 * This type mapping is used to ensure that each field in the EditValues object has the correct type.
+	 *
+	 * @param K The key of the field.
+	 * @returns The type of the field corresponding to the given key.
+	 */
+	type FieldType<K> = K extends "amount"
+		? number
+		: K extends "type"
+			? "income" | "expense"
+			: string;
+
+	/**
+	 * Represents an object containing values for editing.
+	 * The keys of this object are the valid column keys, and the values are the corresponding field types.
+	 *
+	 * @see ValidColumnKey
+	 * @see FieldType
 	 */
 	type EditValues = {
-		date: string;
-		amount: number;
-		type: "income" | "expense";
-		category: string;
-		description: string;
-		notes: string;
+		[K in ValidColumnKey]: FieldType<K>;
 	};
 
 	/**
@@ -99,7 +118,7 @@
 			category: entry.category ?? "",
 			description: entry.description ?? "",
 			notes: entry.notes ?? "",
-		};
+		} as EditValues;
 	}
 
 	/**
@@ -195,6 +214,49 @@
 		pendingDeleteId = null;
 		deleteError = null;
 	}
+
+	type SortDirection = "ASC" | "DESC";
+	let curDir = $state<SortDirection>("DESC");
+	let curSortKey = $state<keyof EditValues>("date");
+
+	/**
+	 * A derived store that returns the sorted entries based on the current sort key and direction.
+	 * This store is updated automatically whenever the sort key or direction changes.
+	 */
+	let sortedEntries = $derived.by(() => {
+		// Create a copy so we don't mutate the raw server props
+		const entriesCopy = [...data.entries];
+
+		return entriesCopy.sort((a, b) => {
+			const valA = a[curSortKey as keyof typeof a];
+			const valB = b[curSortKey as keyof typeof b];
+
+			if (valA === null || valA === undefined) return 1;
+			if (valB === null || valB === undefined) return -1;
+
+			if (valA < valB) {
+				return curDir === "ASC" ? -1 : 1;
+			}
+			if (valA > valB) {
+				return curDir === "ASC" ? 1 : -1;
+			}
+			return 0;
+		});
+	});
+
+	function sort_by(key: keyof EditValues) {
+		// don't re-sort while a row is being edited
+		if (curEditId !== null) {
+			return;
+		}
+
+		if (curSortKey === key) {
+			curDir = curDir === "ASC" ? "DESC" : "ASC";
+		} else {
+			curSortKey = key;
+			curDir = "DESC";
+		}
+	}
 </script>
 
 <!--stores all unique categories in the sql db-->
@@ -212,22 +274,50 @@
 	<table>
 		<thead>
 			<tr>
-				<th></th>
+				<th class="icon-col"></th>
 				{#each possibleHeaders as header (header.header.key)}
 					{#if header.selected}
-						<th>{header.header.label}</th>
+						<th
+							class="clickable"
+							class:selected={header.header.key === curSortKey}
+							onclick={() => sort_by(header.header.key)}
+							title={header.header.key === curSortKey
+								? curDir === "ASC"
+									? "Sorted: Low to High"
+									: "Sorted: High to Low"
+								: "Click to sort by " + header.header.label}
+							>{header.header.label}
+							<span
+								>{#if header.header.key === curSortKey}
+									{#if header.header.key === curSortKey}
+										{#if curDir === "ASC"}
+											<ChevronUp size={14} />
+										{:else}
+											<ChevronDown size={14} />
+										{/if}
+									{:else}
+										<ChevronUp size={14} class="hidden" />
+									{/if}
+								{/if}
+							</span></th
+						>
 					{/if}
 				{/each}
+				<th class="icon-col hidden"></th>
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.entries as entry (entry.id)}
+			{#each sortedEntries as entry (entry.id)}
 				<tr>
 					<td class:icon-col={!saveError}>
 						{#if entry.id !== curEditId}
-							<Pencil class="clickable-icon" size={16} onclick={() => editLine(entry)} />
+							<span title="Edit Entry">
+								<Pencil class="clickable" size={16} onclick={() => editLine(entry)} />
+							</span>
 						{:else}
-							<SquareCheckBig class="clickable-icon" size={16} onclick={() => doneEdit()} />
+							<span title="Save Entry">
+								<SquareCheckBig class="clickable" size={16} onclick={() => doneEdit()} />
+							</span>
 							{#if saveError}
 								<span class="error">{saveError}</span>
 							{/if}
@@ -279,7 +369,7 @@
 								{:else}
 									<!-- display mode -->
 									{#if header.header.key === "date"}
-										{new Date(entry.date).toLocaleDateString()}
+										{new Date(entry.date + "T00:00:00").toLocaleDateString()}
 									{:else if header.header.key === "amount"}
 										${entry.amount.toFixed(2)}
 									{:else if header.header.key === "type"}
@@ -293,18 +383,22 @@
 					{/each}
 
 					{#if entry.id === curEditId && editValues}
-						<td class="edit-col top-bot-border">
+						<td class="icon-col top-bot-border">
 							{#if deleteError}
 								<span class="error">{deleteError}</span>
 							{/if}
 							{#if pendingDeleteId}
-								<CircleCheckBig
-									class="clickable-icon error"
-									size={16}
-									onclick={() => confirmDelete()}
-								/>
+								<span title="Confirm Delete">
+									<CircleCheckBig
+										class="clickable error"
+										size={16}
+										onclick={() => confirmDelete()}
+									/>
+								</span>
 							{:else}
-								<Trash2 class="clickable-icon" size={16} onclick={() => enableDelete()} />
+								<span title="Delete Entry">
+									<Trash2 class="clickable" size={16} onclick={() => enableDelete()} />
+								</span>
 							{/if}
 						</td>
 					{/if}
