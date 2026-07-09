@@ -120,6 +120,7 @@ nav {
 
 .hidden {
 	visibility: hidden;
+	border: 0;
 }
 
 /* -- Buttons -- */
@@ -232,7 +233,8 @@ textarea {
 	color: var(--error);
 }
 
-.clickable-icon {
+.clickable {
+	user-select: none;
 	cursor: pointer;
 }
 
@@ -241,6 +243,7 @@ table {
 	width: 100%;
 	border-collapse: collapse;
 	margin-top: var(--margin-table);
+	table-layout: fixed;
 }
 
 th,
@@ -248,6 +251,9 @@ td {
 	text-align: left;
 	padding: var(--padding-cell);
 	border-bottom: 1px solid var(--border-subtle);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 td.edit {
@@ -255,15 +261,40 @@ td.edit {
 	color: var(--accent-2);
 }
 
-td.icon-col {
+th.selected {
+	display: flex;
+	justify-content: space-between;
+	background-color: var(--dark-2);
+	color: var(--dark-3);
+}
+
+td.icon-col,
+th.icon-col {
+	width: 2rem;
+	min-width: 2rem;
+	max-width: 2rem;
 	text-align: center;
 	padding: var(--padding-icon);
-	width: 1%;
 }
 
 td.top-bot-border {
 	border-top: 1px solid var(--border-subtle);
 	border-bottom: 1px solid var(--border-subtle);
+}
+
+td input,
+td select {
+	height: 1.7rem;
+	padding: 0 0.2rem;
+	font-size: 0.9rem;
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+}
+
+tr {
+	height: 2.5rem;
+	max-height: 2.5rem;
 }
 
 /* -- Settings -- */
