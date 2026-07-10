@@ -3,7 +3,9 @@ name: Build and Push Docker Image
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+    branches:
+      - dev
 
 jobs:
   build:
@@ -26,6 +28,7 @@ jobs:
 
       - name: Extract version from tag
         id: version
+        if: github.ref_type == 'tag'
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build and push
@@ -35,5 +38,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            rabbitrancher/jaba:${{ steps.version.outputs.VERSION }}
-            rabbitrancher/jaba:latest
+            ${{ github.ref_type == 'tag' && format('rabbitrancher/jaba:{0}', steps.version.outputs.VERSION) || '' }}
+            ${{ github.ref_type == 'tag' && 'rabbitrancher/jaba:latest' || 'rabbitrancher/jaba:dev' }}

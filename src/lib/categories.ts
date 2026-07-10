@@ -17,9 +17,11 @@ export const BASE_CATEGORIES = [
 	// Transport
 	"Gas",
 	"Parking",
+	"Car Insurance",
 
 	// Subscriptions
 	"Streaming",
+	"Phone Plan",
 	"Software",
 	"Gym / Fitness",
 

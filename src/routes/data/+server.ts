@@ -45,6 +45,9 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	}
 	if (updates.amount) {
 		safeUpdates.amount = Number(updates.amount);
+		if (Number(safeUpdates.amount) < 0) {
+			return json({ error: "Can't have a negative amount" }, { status: 400 });
+		}
 	}
 	if (updates.type === "income" || updates.type === "expense") {
 		safeUpdates.type = updates.type;
@@ -80,5 +83,22 @@ export const PATCH: RequestHandler = async ({ request }) => {
 
 	await db.update(entries).set(safeUpdates).where(eq(entries.id, id));
 
+	return json({ success: true });
+};
+
+/**
+ * Deletes an existing entry in the database.
+ *
+ * @returns { success: true } on success
+ * @returns { error: string } with status 400 on validation failure
+ */
+export const DELETE: RequestHandler = async ({ request }) => {
+	const body = (await request.json()) as { id: number };
+	const { id } = body;
+	if (!id || typeof id !== "number") {
+		return json({ error: "Invalid id" }, { status: 400 });
+	}
+
+	await db.delete(entries).where(eq(entries.id, id));
 	return json({ success: true });
 };

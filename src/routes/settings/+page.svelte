@@ -42,23 +42,23 @@
 	/**
 	 * Handles the drag start event by updating the dragIndex state.
 	 *
-	 * @param {number} index The index of the element being dragged.
+	 * @param {number} i The index of the element being dragged.
 	 */
-	function dragstart(index: number) {
-		dragIndex = index;
+	function dragstart(i: number) {
+		dragIndex = i;
 	}
 
 	/**
 	 * Reorders the Headers array and saves the change to local storage.
 	 *
-	 * @param {number} index The index where the dragged element should be dropped.
+	 * @param {number} i The index where the dragged element should be dropped.
 	 */
-	function drop(index: number) {
-		if (dragIndex === null || dragIndex === index) return;
+	function drop(i: number) {
+		if (dragIndex === null || dragIndex === i) return;
 
 		const updated = [...headers];
 		const [moved] = updated.splice(dragIndex, 1);
-		updated.splice(index, 0, moved);
+		updated.splice(i, 0, moved);
 
 		headers = updated;
 		localStorage.setItem("table_headers", JSON.stringify(headers));
