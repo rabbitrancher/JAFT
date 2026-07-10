@@ -38,6 +38,7 @@
 	"dependencies": {
 		"@lucide/svelte": "^1.18.0",
 		"better-sqlite3": "^12.11.1",
+		"chart.js": "^4.5.1",
 		"drizzle-orm": "^0.45.2",
 		"fuse.js": "^7.4.2"
 	}
