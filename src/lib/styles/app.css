@@ -60,12 +60,11 @@
 
 	--gap-hero: 1rem;
 	--gap-button-row: 7rem;
-	--gap-field: 0.5rem;
+	--gap-field: 1rem;
 	--margin-field: 0.75rem;
 	--margin-table: 1rem;
 	--padding-hero: 2rem;
 
-	--label-width: 90px;
 	--row-height: 2.5rem;
 	--search-width: 200px;
 	--search-height: 1.5rem;
@@ -187,11 +186,26 @@ nav {
 
 /* -- Forms -- */
 .field {
+	display: contents;
+}
+
+.entry-form {
 	display: grid;
-	grid-template-columns: var(--label-width) 1fr;
+	grid-template-columns: max-content 1fr;
 	align-items: center;
-	gap: var(--gap-field);
+	gap: var(--gap-field) var(--gap-field);
 	margin-bottom: var(--margin-field);
+	width: 100%;
+	max-width: 300px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.entry-form .button,
+.entry-form .success,
+.entry-form .error {
+	grid-column: 1 / -1;
+	justify-self: center;
 }
 
 .autocomplete {
@@ -225,6 +239,7 @@ textarea {
 	margin: 0;
 	padding: 0;
 	z-index: var(--z-suggestions);
+	grid-column: 2;
 }
 
 .suggestions li button {

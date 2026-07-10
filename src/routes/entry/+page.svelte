@@ -62,7 +62,7 @@
 	const today = new Date().toISOString().split("T")[0];
 </script>
 
-<form method="POST" class="hero" use:enhance>
+<form method="POST" class="hero entry-form" use:enhance>
 	<div class="field">
 		<label for="amount">Amount:</label>
 		<input type="number" id="amount" name="amount" placeholder="($)" step="0.01" required />
@@ -79,61 +79,65 @@
 	<!-- use a hidden field to transfer browser data (localStorage) to the server -->
 	<input type="hidden" name="categories_enforced" value={categoriesEnforced} />
 
-	<div class="field autocomplete">
+	<div class="field">
 		<label for="category">Category:</label>
-		<input
-			type="text"
-			id="category"
-			name="category"
-			bind:value={category_input}
-			onfocus={() => (showCategorySuggestions = true)}
-			onblur={() => (showCategorySuggestions = false)}
-			autocomplete="off"
-			required
-		/>
-		{#if showCategorySuggestions && category_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each category_suggestions as suggestion (suggestion)}
-					<li>
-						<button
-							type="button"
-							// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
-							onmousedown={() => selectCategory(suggestion)}
-						>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		<div class="autocomplete">
+			<input
+				type="text"
+				id="category"
+				name="category"
+				bind:value={category_input}
+				onfocus={() => (showCategorySuggestions = true)}
+				onblur={() => (showCategorySuggestions = false)}
+				autocomplete="off"
+				required
+			/>
+			{#if showCategorySuggestions && category_suggestions.length > 0}
+				<ul class="suggestions">
+					{#each category_suggestions as suggestion (suggestion)}
+						<li>
+							<button
+								type="button"
+								// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
+								onmousedown={() => selectCategory(suggestion)}
+							>
+								{suggestion}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
-	<div class="field autocomplete">
+	<div class="field">
 		<label for="description">Description:</label>
-		<input
-			type="text"
-			id="description"
-			name="description"
-			bind:value={description_input}
-			onfocus={() => (showDescriptionSuggestions = true)}
-			onblur={() => (showDescriptionSuggestions = false)}
-			autocomplete="off"
-		/>
-		{#if showDescriptionSuggestions && description_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each description_suggestions as suggestion (suggestion)}
-					<li>
-						<button
-							type="button"
-							// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
-							onmousedown={() => selectDescription(suggestion)}
-						>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		<div class="autocomplete">
+			<input
+				type="text"
+				id="description"
+				name="description"
+				bind:value={description_input}
+				onfocus={() => (showDescriptionSuggestions = true)}
+				onblur={() => (showDescriptionSuggestions = false)}
+				autocomplete="off"
+			/>
+			{#if showDescriptionSuggestions && description_suggestions.length > 0}
+				<ul class="suggestions">
+					{#each description_suggestions as suggestion (suggestion)}
+						<li>
+							<button
+								type="button"
+								// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
+								onmousedown={() => selectDescription(suggestion)}
+							>
+								{suggestion}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
 	<div class="field">
@@ -146,6 +150,7 @@
 		<input type="date" id="date" name="date" value={today} required />
 	</div>
 
+	<div></div>
 	<button type="submit" class="button">Save Entry</button>
 
 	{#if form?.success}
