@@ -24,27 +24,6 @@
 		}
 	});
 
-	// category autocomplete
-	let category_input = $state("");
-	let showCategorySuggestions = $state(false);
-
-	const categoryFuse = $derived(new Fuse(data.categories, { threshold: 0.4 }));
-
-	let category_suggestions = $derived(
-		category_input.length > 0
-			? categoryFuse
-					.search(category_input)
-					// only closest 5
-					.slice(0, 5)
-					.map((r) => r.item)
-			: [],
-	);
-
-	function selectCategory(value: string) {
-		category_input = value;
-		showCategorySuggestions = false;
-	}
-
 	let description_input = $state("");
 	let showDescriptionSuggestions = $state(false);
 
@@ -80,6 +59,13 @@
 	const today = new Date().toISOString().split("T")[0];
 </script>
 
+<!--stores all unique categories from the sql db-->
+<datalist id="categories">
+	{#each data.categories.sort() as category (category)}
+		<option value={category}></option>
+	{/each}
+</datalist>
+
 <form method="POST" class="hero entry-form" use:enhance>
 	<div class="field">
 		<label for="amount">Amount:</label>
@@ -99,33 +85,14 @@
 
 	<div class="field">
 		<label for="category">Category:</label>
-		<div class="autocomplete">
-			<input
-				type="text"
-				id="category"
-				name="category"
-				bind:value={category_input}
-				onfocus={() => (showCategorySuggestions = true)}
-				onblur={() => (showCategorySuggestions = false)}
-				autocomplete="off"
-				required
-			/>
-			{#if showCategorySuggestions && category_suggestions.length > 0}
-				<ul class="suggestions">
-					{#each category_suggestions as suggestion (suggestion)}
-						<li>
-							<button
-								type="button"
-								// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
-								onmousedown={() => selectCategory(suggestion)}
-							>
-								{suggestion}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
+		<input
+			type="text"
+			list="categories"
+			id="category"
+			name="category"
+			autocomplete="off"
+			required
+		/>
 	</div>
 
 	<div class="field">

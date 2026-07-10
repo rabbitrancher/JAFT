@@ -298,7 +298,7 @@
 	}
 </script>
 
-<!--stores all unique categories in the sql db-->
+<!--stores all unique categories from the sql db-->
 <datalist id="categories">
 	{#each data.categories as category (category)}
 		<option value={category}></option>
