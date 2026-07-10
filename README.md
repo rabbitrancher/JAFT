@@ -25,6 +25,18 @@ income!) quickly and intuitively. The current stored fields are:
 - **Date**: When the transaction occurs! And it defaults to the current date because clicking is
   something to be avoided.
 
+## What Can It Do?
+
+Beyond just storing entries, the data table has a few tricks:
+
+- **Sort** by any visible column - click the header, click again to flip direction. Standard header sorting stuff.
+- **Search** across visible text columns (category, description, and notes) with fuzzy
+  matching, so typos aren't the end of the world.
+- **Edit** any entry inline - click the pencil, change what you want, click the
+  checkmark to save.
+- **Delete** entries with a two-click confirmation so you don't accidentally remove the charge for that engagement ring.
+- **Customize columns** from the settings page - hide ones you don't care about.
+
 ## How Do I Use It?
 
 You actually want to? Awesome!
