@@ -7,12 +7,20 @@
 
 	let categoriesEnforced = $state(true);
 
-	// on page load, if there's no local storage for if categories have be enforced, assume they are
+	let descriptionRequired = $state<boolean>(false);
+
+	// on page load, if there's no local storage for if categories have be enforced, assume they are. Additionally, if there's no local storage for if a description is required, assume it is not.
 	onMount(() => {
-		const saved = localStorage.getItem("categories_enforced");
-		if (saved) {
-			let parsed = JSON.parse(saved);
-			categoriesEnforced = parsed;
+		const categoriesEnforcedSaved = localStorage.getItem("categories_enforced");
+		if (categoriesEnforcedSaved != null) {
+			const parsedEnforcement = JSON.parse(categoriesEnforcedSaved);
+			categoriesEnforced = parsedEnforcement;
+		}
+
+		const descriptionRequiredSaved = localStorage.getItem("description_required");
+		if (descriptionRequiredSaved != null) {
+			const parsedRequired = JSON.parse(descriptionRequiredSaved);
+			descriptionRequired = parsedRequired;
 		}
 	});
 
@@ -37,12 +45,17 @@
 		showCategorySuggestions = false;
 	}
 
-	// description autocomplete
 	let description_input = $state("");
 	let showDescriptionSuggestions = $state(false);
 
+	/**
+	 * A Fuse for searching description suggestions.
+	 */
 	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
 
+	/**
+	 * Holds closest descriptions to the input
+	 */
 	let description_suggestions = $derived(
 		description_input.length > 0
 			? descFuse
@@ -53,6 +66,11 @@
 			: [],
 	);
 
+	/**
+	 * Handles selection of a description suggestion.
+	 *
+	 * @param {string} value The selected description suggestion.
+	 */
 	function selectDescription(value: string) {
 		description_input = value;
 		showDescriptionSuggestions = false;
@@ -121,6 +139,7 @@
 				onfocus={() => (showDescriptionSuggestions = true)}
 				onblur={() => (showDescriptionSuggestions = false)}
 				autocomplete="off"
+				required={descriptionRequired}
 			/>
 			{#if showDescriptionSuggestions && description_suggestions.length > 0}
 				<ul class="suggestions">
