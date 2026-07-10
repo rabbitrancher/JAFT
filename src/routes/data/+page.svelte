@@ -7,11 +7,33 @@
 		ChevronUp,
 		CircleCheckBig,
 		Pencil,
+		Search,
 		SquareCheckBig,
 		Trash2,
 	} from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
 	import Fuse from "fuse.js";
+
+	/**
+	 * Represents the type of a field in the EditValues object, based on the column key.
+	 *
+	 * @template K The column key.
+	 */
+	type FieldType<K> = K extends "amount"
+		? number
+		: K extends "type"
+			? "income" | "expense"
+			: string;
+
+	/**
+	 * Represents the object containing the values of the row currently being edited.
+	 * The properties of this object are determined by the ValidColumnKey type, and their types are determined by the FieldType type.
+	 */
+	type EditValues = {
+		[K in ValidColumnKey]: FieldType<K>;
+	};
+
+	type SortDirection = "ASC" | "DESC";
 
 	let { data } = $props();
 
@@ -28,17 +50,16 @@
 	 */
 	let categoriesEnforced = $state<boolean>(true);
 
+	// svelte-ignore non_reactive_update
 	/**
-	 * Stores whether the description suggestions should currently be shown or not.
-	 * Description suggestions are a list of previously entered descriptions that match the current input.
+	 * Stores a reference to the HTML input element used for searching.
 	 */
-	let showDescSuggestions = $state(false);
+	let searchInput: HTMLInputElement;
 
-	/**
-	 * Creates a Fuse.js instance for searching through the list of previously entered descriptions.
-	 * This Fuse instance is used to generate the description suggestions.
-	 */
-	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
+	let searchQuery = $state("");
+
+	let curDir = $state<SortDirection>("DESC");
+	let curSortKey = $state<keyof EditValues>("date");
 
 	/**
 	 * The ID of the current row being edited, corresponding to the SQL id
@@ -50,6 +71,86 @@
 	 */
 	let editValues = $state<EditValues | null>(null);
 
+	/**
+	 * Stores whether the description suggestions should currently be shown or not.
+	 * Description suggestions are a list of previously entered descriptions that match the current input.
+	 */
+	let showDescSuggestions = $state(false);
+
+	/**
+	 * Contains the error message for if a entry was not saved upon edit
+	 */
+	let saveError = $state<string | null>(null);
+
+	/**
+	 * The ID of the row that could be deleted if confirmDelete() is called, corresponding to the SQL id.
+	 */
+	let pendingDeleteId = $state<number | null>(null);
+	/**
+	 * Contains the error message for if a entry was not saved upon edit
+	 */
+	let deleteError = $state<string | null>(null);
+
+	/**
+	 * A derived store that returns the sorted entries based on the current sort key and direction.
+	 * This store is updated automatically whenever the sort key or direction changes.
+	 */
+	let sortedEntries = $derived.by(() => {
+		// Create a copy so we don't mutate the raw server props
+		const entriesCopy = [...data.entries];
+
+		return entriesCopy.sort((a, b) => {
+			const valA = a[curSortKey as keyof typeof a];
+			const valB = b[curSortKey as keyof typeof b];
+
+			if (valA === null || valA === undefined) return 1;
+			if (valB === null || valB === undefined) return -1;
+
+			if (valA < valB) {
+				return curDir === "ASC" ? -1 : 1;
+			}
+			if (valA > valB) {
+				return curDir === "ASC" ? 1 : -1;
+			}
+			return 0;
+		});
+	});
+
+	/**
+	 * Creates a Fuse.js instance for searching through the sorted entries based on the currently selected headers.
+	 * This Fuse instance is used to generate the search results that filters the table.
+	 */
+	const searchFuse = $derived(
+		new Fuse(sortedEntries, {
+			threshold: 0.4,
+			keys: possibleHeaders
+				.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key))
+				.map((h) => h.header.key),
+		}),
+	);
+
+	/**
+	 * A derived store that filters the sorted entries based on the current search query.
+	 * If the search query is empty, returns the sorted entries.
+	 * Otherwise, searches for the query in the currently selected headers and returns the matching entries.
+	 */
+	let filteredEntries = $derived.by(() => {
+		if (!searchQuery.trim()) return sortedEntries;
+		const results = searchFuse.search(searchQuery).map((r) => r.item);
+		return sortedEntries.filter((e) => results.some((r) => r.id === e.id));
+	});
+
+	/**
+	 * Creates a Fuse.js instance for searching through the list of previously entered descriptions.
+	 * This Fuse instance is used to generate the description suggestions.
+	 */
+	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
+
+	/**
+	 * A derived store that generates a list of description suggestions based on the currently edited description.
+	 * If the edited description is empty, an empty array is returned.
+	 * Otherwise, the description is used as a search query in the descFuse instance, and up to 5 matching descriptions are returned.
+	 */
 	let descSuggestions = $derived(
 		editValues && editValues.description.length > 0
 			? descFuse
@@ -77,28 +178,23 @@
 	});
 
 	/**
-	 * Maps a given key to its corresponding field type.
-	 * This type mapping is used to ensure that each field in the EditValues object has the correct type.
-	 *
-	 * @param K The key of the field.
-	 * @returns The type of the field corresponding to the given key.
+	 * Sorts the entries based on the specified key.
+	 * If the same key is clicked again, the sort direction is toggled.
+	 * @param key The key to sort by.
 	 */
-	type FieldType<K> = K extends "amount"
-		? number
-		: K extends "type"
-			? "income" | "expense"
-			: string;
+	function sort_by(key: keyof EditValues) {
+		// don't re-sort while a row is being edited
+		if (curEditId !== null) {
+			return;
+		}
 
-	/**
-	 * Represents an object containing values for editing.
-	 * The keys of this object are the valid column keys, and the values are the corresponding field types.
-	 *
-	 * @see ValidColumnKey
-	 * @see FieldType
-	 */
-	type EditValues = {
-		[K in ValidColumnKey]: FieldType<K>;
-	};
+		if (curSortKey === key) {
+			curDir = curDir === "ASC" ? "DESC" : "ASC";
+		} else {
+			curSortKey = key;
+			curDir = "DESC";
+		}
+	}
 
 	/**
 	 * Switches a row into edit mode, pre-filling inputs with current values.
@@ -120,11 +216,6 @@
 			notes: entry.notes ?? "",
 		} as EditValues;
 	}
-
-	/**
-	 * Contains the error message for if a entry was not saved upon edit
-	 */
-	let saveError = $state<string | null>(null);
 
 	/**
 	 * Saves the currently edited row to the server, then exits edit mode.
@@ -154,15 +245,6 @@
 		resetLines();
 		return true;
 	}
-
-	/**
-	 * The ID of the row that could be deleted if confirmDelete() is called, corresponding to the SQL id.
-	 */
-	let pendingDeleteId = $state<number | null>(null);
-	/**
-	 * Contains the error message for if a entry was not saved upon edit
-	 */
-	let deleteError = $state<string | null>(null);
 
 	/**
 	 * Enables deletion of the currently edited row.
@@ -214,49 +296,6 @@
 		pendingDeleteId = null;
 		deleteError = null;
 	}
-
-	type SortDirection = "ASC" | "DESC";
-	let curDir = $state<SortDirection>("DESC");
-	let curSortKey = $state<keyof EditValues>("date");
-
-	/**
-	 * A derived store that returns the sorted entries based on the current sort key and direction.
-	 * This store is updated automatically whenever the sort key or direction changes.
-	 */
-	let sortedEntries = $derived.by(() => {
-		// Create a copy so we don't mutate the raw server props
-		const entriesCopy = [...data.entries];
-
-		return entriesCopy.sort((a, b) => {
-			const valA = a[curSortKey as keyof typeof a];
-			const valB = b[curSortKey as keyof typeof b];
-
-			if (valA === null || valA === undefined) return 1;
-			if (valB === null || valB === undefined) return -1;
-
-			if (valA < valB) {
-				return curDir === "ASC" ? -1 : 1;
-			}
-			if (valA > valB) {
-				return curDir === "ASC" ? 1 : -1;
-			}
-			return 0;
-		});
-	});
-
-	function sort_by(key: keyof EditValues) {
-		// don't re-sort while a row is being edited
-		if (curEditId !== null) {
-			return;
-		}
-
-		if (curSortKey === key) {
-			curDir = curDir === "ASC" ? "DESC" : "ASC";
-		} else {
-			curSortKey = key;
-			curDir = "DESC";
-		}
-	}
 </script>
 
 <!--stores all unique categories in the sql db-->
@@ -266,7 +305,29 @@
 	{/each}
 </datalist>
 
-<h1>Your Entries</h1>
+<div class="table-header-row">
+	<h1>Your Entries</h1>
+	{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
+		<div class="search-row" style="align-self: flex-end;">
+			<div class="search-box">
+				<Search
+					size={14}
+					aria-hidden="true"
+					class="clickable"
+					onclick={() => searchInput.focus()}
+				/>
+				<input
+					type="text"
+					class="search-input"
+					placeholder="Search entries..."
+					bind:value={searchQuery}
+					bind:this={searchInput}
+					onfocus={() => searchInput.select()}
+				/>
+			</div>
+		</div>
+	{/if}
+</div>
 
 {#if data.entries.length === 0}
 	<p>No entries yet.</p>
@@ -307,7 +368,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each sortedEntries as entry (entry.id)}
+			{#each filteredEntries as entry (entry.id)}
 				<tr>
 					<td class:icon-col={!saveError}>
 						{#if entry.id !== curEditId}
