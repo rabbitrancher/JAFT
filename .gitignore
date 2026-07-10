@@ -2,23 +2,10 @@
 node_modules
 
 # Output
-.output
-.vercel
-.netlify
 .wrangler
 .svelte-kit/
 build/
 budget.db
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Env
-.env
-.env.*
-!.env.example
-!.env.test
 
 # Vite
 vite.config.js.timestamp-*
@@ -35,3 +22,7 @@ vite.config.ts.timestamp-*
 # Docker
 make_docker.sh
 clean_docker_cache.sh
+
+# Logo
+*.kra~
+*.png~

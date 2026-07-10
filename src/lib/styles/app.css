@@ -80,6 +80,13 @@ body {
 	color: var(--text);
 }
 
+.logo {
+	width: 32px;
+	height: 32px;
+	image-rendering: pixelated;
+	aspect-ratio: 1 / 1;
+}
+
 /* -- Navigation -- */
 nav {
 	display: flex;
