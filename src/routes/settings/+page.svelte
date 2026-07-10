@@ -6,9 +6,19 @@
 
 	let headers = $state<HeaderOption[]>(DEFAULT_SELECTED_HEADERS);
 
+	/**
+	 * Categories enforced setting, determines if categories must come from the predefined set of possibilities.
+	 * @type {boolean} - true if enforced, false otherwise
+	 */
 	let categoriesEnforced = $state<boolean>(true);
 
-	// on page load, if there is local storage, use that instead of the default values for table headers for the selected headers, as well as if categories are enforced.
+	/**
+	 * Description required setting, determines if the description field is required in the entry form.
+	 * @type {boolean} - true if required, false otherwise
+	 */
+	let descriptionRequired = $state<boolean>(false);
+
+	// on page load, if there is local storage, use that instead of the default values for the settings
 	onMount(() => {
 		const headersSaved = localStorage.getItem("table_headers");
 		if (headersSaved) {
@@ -22,6 +32,12 @@
 		if (categoriesEnforcedSaved != null) {
 			const parsedEnforcement = JSON.parse(categoriesEnforcedSaved);
 			categoriesEnforced = parsedEnforcement;
+		}
+
+		const descriptionRequiredSaved = localStorage.getItem("description_required");
+		if (descriptionRequiredSaved != null) {
+			const parsedRequired = JSON.parse(descriptionRequiredSaved);
+			descriptionRequired = parsedRequired;
 		}
 	});
 
@@ -65,9 +81,22 @@
 		dragIndex = null;
 	}
 
+	/**
+	 * Toggles the categories enforced setting, determining if categories must come from the predefined set of possibilities.
+	 * Updates the local storage with the new setting value.
+	 */
 	function toggleLockedCategories() {
 		categoriesEnforced = !categoriesEnforced;
 		localStorage.setItem("categories_enforced", JSON.stringify(categoriesEnforced));
+	}
+
+	/**
+	 * Toggles the description required setting, determining if the description field is required in the entry form.
+	 * Updates the local storage with the new setting value.
+	 */
+	function toggleDescriptionRequired() {
+		descriptionRequired = !descriptionRequired;
+		localStorage.setItem("description_required", JSON.stringify(descriptionRequired));
 	}
 </script>
 
@@ -117,6 +146,28 @@
 					<Lock /> Locked
 				{:else}
 					<LockOpen /> Unlocked
+				{/if}</button
+			>
+		</div>
+	</div>
+</div>
+
+<!--Require Description-->
+<div class="hero">
+	<div class="settings-section">
+		<h2>Require Description</h2>
+		<p class="settings-description">
+			Choose whether or not the "Description" field is required for the entry form.
+		</p>
+		<div class="pill-group center-inside">
+			<button
+				class="pill pill-icon"
+				class:active={descriptionRequired}
+				onclick={() => toggleDescriptionRequired()}
+				>{#if descriptionRequired}
+					<Lock /> Required
+				{:else}
+					<LockOpen /> Not Required
 				{/if}</button
 			>
 		</div>
