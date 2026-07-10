@@ -41,6 +41,7 @@
 	--success: var(--status-success);
 	--error: var(--status-error);
 
+	/* -- Sizing -- */
 	--radius-sm: 4px;
 	--radius-md: 6px;
 	--radius-pill: 900px;
@@ -65,12 +66,16 @@
 	--padding-hero: 2rem;
 
 	--label-width: 90px;
+	--row-height: 2.5rem;
+	--search-width: 200px;
+	--search-height: 1.5rem;
 
 	--transition-pill: background 0.15s, color 0.15s;
 
 	--z-suggestions: 10;
 }
 
+/* -- Base -- */
 body {
 	background-color: var(--bg);
 	color: var(--text);
@@ -121,6 +126,18 @@ nav {
 .hidden {
 	visibility: hidden;
 	border: 0;
+}
+
+.clickable {
+	user-select: none;
+	cursor: pointer;
+}
+
+.table-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
 }
 
 /* -- Buttons -- */
@@ -189,6 +206,7 @@ textarea {
 	border-radius: var(--radius-sm);
 	width: 100%;
 	box-sizing: border-box;
+	background-color: var(--text-on-primary);
 }
 
 textarea {
@@ -233,9 +251,31 @@ textarea {
 	color: var(--error);
 }
 
-.clickable {
-	user-select: none;
-	cursor: pointer;
+/* -- Search -- */
+.search-row {
+	display: flex;
+	justify-content: flex-end;
+	margin-right: 2rem;
+}
+
+.search-box {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	background-color: var(--bg-elevated);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	padding: 0.25rem 0.5rem;
+}
+
+.search-input {
+	width: var(--search-width);
+	height: var(--search-height);
+	background: transparent;
+	border: none;
+	outline: none;
+	padding: 0;
+	color: var(--text);
 }
 
 /* -- Table -- */
@@ -256,14 +296,17 @@ td {
 	white-space: nowrap;
 }
 
+tr {
+	height: var(--row-height);
+	max-height: var(--row-height);
+}
+
 td.edit {
 	background-color: var(--dark-3);
 	color: var(--accent-2);
 }
 
 th.selected {
-	display: flex;
-	justify-content: space-between;
 	background-color: var(--dark-2);
 	color: var(--dark-3);
 }
@@ -290,11 +333,6 @@ td select {
 	box-sizing: border-box;
 	width: 100%;
 	margin: 0;
-}
-
-tr {
-	height: 2.5rem;
-	max-height: 2.5rem;
 }
 
 /* -- Settings -- */
