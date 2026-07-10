@@ -12,13 +12,13 @@
 	<title>JABA</title>
 </svelte:head>
 <nav>
-	<div style="display: flex; gap: 30px;">
+	<div class="nav-bar">
 		<a href={resolve("/")} title="Home">
 			<img class="logo" src={logo} alt="Logo" />
 		</a>
-		<a class="nav-a" href={resolve("/")}>Home</a>
 		<a class="nav-a" href={resolve("/entry")}>Entry</a>
-		<a class="nav-a" href={resolve("/data")}>View my Data</a>
+		<a class="nav-a" href={resolve("/table")}>Data Table</a>
+		<a class="nav-a" href={resolve("/graphs")}>Data Graphs</a>
 	</div>
 	<a class="nav-a" href={resolve("/settings")} title="Settings">
 		<Settings />

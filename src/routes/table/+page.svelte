@@ -227,7 +227,7 @@
 		if (curEditId === null || editValues === null) {
 			return true;
 		}
-		const result = await fetch("/data", {
+		const result = await fetch("/table", {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -268,7 +268,7 @@
 		if (curEditId === null || editValues === null) {
 			return true;
 		}
-		const result = await fetch("/data", {
+		const result = await fetch("/table", {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
