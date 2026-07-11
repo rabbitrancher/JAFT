@@ -326,6 +326,7 @@ tr {
 td.edit {
 	background-color: var(--dark-3);
 	color: var(--accent-2);
+	overflow: visible;
 }
 
 th.selected {
