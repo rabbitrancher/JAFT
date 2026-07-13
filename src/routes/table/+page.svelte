@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { DEFAULT_SELECTED_HEADERS, type ValidColumnKey } from "$lib/tableHeaders.js";
 	import { toTitleCase } from "$lib/utils/format.js";
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import {
 		ChevronDown,
 		ChevronUp,
@@ -12,6 +12,7 @@
 		Trash2,
 	} from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
 	import Fuse from "fuse.js";
 
 	/**
@@ -78,7 +79,7 @@
 	let showDescSuggestions = $state(false);
 
 	/**
-	 * Contains the error message for if a entry was not saved upon edit
+	 * Contains the error message for if a entry was not saved upon edit.
 	 */
 	let saveError = $state<string | null>(null);
 
@@ -86,10 +87,17 @@
 	 * The ID of the row that could be deleted if confirmDelete() is called, corresponding to the SQL id.
 	 */
 	let pendingDeleteId = $state<number | null>(null);
+
 	/**
-	 * Contains the error message for if a entry was not saved upon edit
+	 * Contains the error message for if an entry was not deleted upon delete.
 	 */
 	let deleteError = $state<string | null>(null);
+
+	/**
+	 * The date to highlight, set via the ?highlight= URL param from graph navigation.
+	 * All rows matching this date will be highlighted and scrolled into view on load.
+	 */
+	let highlightDate = $state<string | null>(null);
 
 	/**
 	 * A derived store that returns the sorted entries based on the current sort key and direction.
@@ -160,8 +168,9 @@
 			: [],
 	);
 
-	// on page load, if there is local storage, use that instead of the default values for table headers for the selected headers, as well as if categories are enforced.
-	onMount(() => {
+	// On page load, if there is local storage, use that instead of the default values for table headers for the selected headers, as well as if categories are enforced.
+	// Also check for a highlight param from graph navigation and scroll to the matching row if found.
+	onMount(async () => {
 		const headersSaved = localStorage.getItem("table_headers");
 		if (headersSaved) {
 			const parsedHeaders = JSON.parse(headersSaved);
@@ -174,6 +183,15 @@
 		if (categoriesEnforcedSaved != null) {
 			const parsedEnforcement = JSON.parse(categoriesEnforcedSaved);
 			categoriesEnforced = parsedEnforcement;
+		}
+
+		const dateParam = page.url.searchParams.get("date");
+		if (dateParam) {
+			highlightDate = dateParam;
+			await tick();
+			document
+				.querySelector(`tr[data-date="${dateParam}"]`)
+				?.scrollIntoView({ behavior: "smooth", block: "center" });
 		}
 	});
 
@@ -369,7 +387,7 @@
 		</thead>
 		<tbody>
 			{#each filteredEntries as entry (entry.id)}
-				<tr>
+				<tr data-date={entry.date} class:highlighted={entry.date === highlightDate}>
 					<td class:icon-col={!saveError}>
 						{#if entry.id !== curEditId}
 							<span title="Edit Entry">
