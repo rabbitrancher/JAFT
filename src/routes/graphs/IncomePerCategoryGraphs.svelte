@@ -28,7 +28,6 @@
 	let { points, timeRange = $bindable("all") } = $props<{
 		points: CategoryPoint[];
 		timeRange?: TimeRange;
-		totalExpenses: number;
 	}>();
 
 	let barCanvas = $state<HTMLCanvasElement>();
@@ -42,7 +41,7 @@
 	let isDropdownOpen = $state(false);
 
 	onMount(() => {
-		const saved = localStorage.getItem("graph_excluded_categories");
+		const saved = localStorage.getItem("income_excluded_categories");
 		if (saved) {
 			excludedCategories = JSON.parse(saved);
 		}
@@ -62,16 +61,16 @@
 		} else {
 			excludedCategories = [...excludedCategories, category];
 		}
-		localStorage.setItem("graph_excluded_categories", JSON.stringify(excludedCategories));
+		localStorage.setItem("income_excluded_categories", JSON.stringify(excludedCategories));
 	}
 
 	/**
-	 * Holds a static list of available categories for the expenses checkboxes.
+	 * Holds a static list of available categories for the income checkboxes.
 	 */
 	let allCategories = $derived.by<string[]>(() => {
 		const unique = new Set<string>(
 			points
-				.filter((p: CategoryPoint) => p.type === "expense")
+				.filter((p: CategoryPoint) => p.type === "income")
 				.map((p: CategoryPoint) => p.category),
 		);
 		return Array.from(unique).sort();
@@ -95,11 +94,11 @@
 		return points;
 	});
 
-	let categoryExpenseTotals = $derived.by(() => {
+	let categoryIncomeTotals = $derived.by(() => {
 		const totals = new SvelteMap<string, number>();
 
 		for (const point of visiblePoints.filter(
-			(p: CategoryPoint) => p.type === "expense" && !excludedCategories.includes(p.category),
+			(p: CategoryPoint) => p.type === "income" && !excludedCategories.includes(p.category),
 		)) {
 			totals.set(point.category, (totals.get(point.category) ?? 0) + point.y);
 		}
@@ -107,8 +106,8 @@
 		return [...totals.entries()].sort((a, b) => b[1] - a[1]);
 	});
 
-	let filteredTotalExpenses = $derived(
-		categoryExpenseTotals.reduce((sum, [, amount]) => sum + amount, 0),
+	let filteredTotalIncome = $derived(
+		categoryIncomeTotals.reduce((sum, [, amount]) => sum + amount, 0),
 	);
 
 	let activeCategoryCount = $derived(allCategories.length - excludedCategories.length);
@@ -140,7 +139,7 @@
 
 					ctx.save();
 
-					const text = formatCurrency(filteredTotalExpenses);
+					const text = formatCurrency(filteredTotalIncome);
 
 					ctx.fillStyle = style.getPropertyValue("--text").trim() || "#333";
 					ctx.font = "bold 24px sans-serif";
@@ -166,11 +165,11 @@
 			donutChartInstance = new Chart<"doughnut", number[], string>(donutCanvas, {
 				type: "doughnut",
 				data: {
-					labels: categoryExpenseTotals.map(([name]) => name),
+					labels: categoryIncomeTotals.map(([name]) => name),
 					datasets: [
 						{
-							data: categoryExpenseTotals.map(([, amount]) => amount),
-							backgroundColor: generatePalette(primary, categoryExpenseTotals.length),
+							data: categoryIncomeTotals.map(([, amount]) => amount),
+							backgroundColor: generatePalette(primary, categoryIncomeTotals.length),
 							borderColor: style.getPropertyValue("--bg").trim(),
 							borderWidth: 2,
 							hoverOffset: 8,
@@ -206,7 +205,7 @@
 								label: (context) => {
 									const amount = context.parsed;
 									const percent =
-										filteredTotalExpenses > 0 ? (amount / filteredTotalExpenses) * 100 : 0;
+										filteredTotalIncome > 0 ? (amount / filteredTotalIncome) * 100 : 0;
 
 									return [formatCurrency(amount), `${percent.toFixed(1)}% of spending`];
 								},
@@ -221,11 +220,11 @@
 			barChartInstance = new Chart(barCanvas, {
 				type: "bar",
 				data: {
-					labels: categoryExpenseTotals.map(([name]) => name),
+					labels: categoryIncomeTotals.map(([name]) => name),
 					datasets: [
 						{
 							label: "Amount",
-							data: categoryExpenseTotals.map(([, amount]) => amount),
+							data: categoryIncomeTotals.map(([, amount]) => amount),
 							backgroundColor: primary,
 						},
 					],
@@ -246,7 +245,7 @@
 								label: (ctx) => {
 									const amount = ctx.parsed.x ?? 0;
 									const percent =
-										filteredTotalExpenses === 0 ? 0 : (amount / filteredTotalExpenses) * 100;
+										filteredTotalIncome === 0 ? 0 : (amount / filteredTotalIncome) * 100;
 
 									return [formatCurrency(amount), `${percent.toFixed(1)}% of spending`];
 								},
@@ -283,19 +282,19 @@
 
 	$effect(() => {
 		if (donutChartInstance) {
-			donutChartInstance.data.labels = categoryExpenseTotals.map(([name]) => name);
-			donutChartInstance.data.datasets[0].data = categoryExpenseTotals.map(([, amount]) => amount);
+			donutChartInstance.data.labels = categoryIncomeTotals.map(([name]) => name);
+			donutChartInstance.data.datasets[0].data = categoryIncomeTotals.map(([, amount]) => amount);
 			donutChartInstance.data.datasets[0].backgroundColor = generatePalette(
 				getComputedStyle(document.documentElement).getPropertyValue("--primary").trim(),
-				categoryExpenseTotals.length,
+				categoryIncomeTotals.length,
 			);
 
 			donutChartInstance.update();
 		}
 
 		if (barChartInstance) {
-			barChartInstance.data.labels = categoryExpenseTotals.map(([name]) => name);
-			barChartInstance.data.datasets[0].data = categoryExpenseTotals.map(([, amount]) => amount);
+			barChartInstance.data.labels = categoryIncomeTotals.map(([name]) => name);
+			barChartInstance.data.datasets[0].data = categoryIncomeTotals.map(([, amount]) => amount);
 
 			barChartInstance.update();
 		}

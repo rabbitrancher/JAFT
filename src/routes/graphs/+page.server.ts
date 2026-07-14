@@ -118,7 +118,6 @@ export async function load() {
 		})
 		.from(entries)
 		.leftJoin(categories, eq(entries.category_id, categories.id))
-		.where(eq(entries.type, "expense"))
 		.orderBy(asc(entries.date));
 
 	const categoryPoints: CategoryPoint[] = categoryEntries
