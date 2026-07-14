@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
-import { entries } from "$lib/server/db/schema";
-import { asc } from "drizzle-orm";
+import { categories, entries } from "$lib/server/db/schema";
+import { asc, eq } from "drizzle-orm";
 
 /**
  * Represents a point on a chart with a date string x-axis and a numeric y-axis.
@@ -16,6 +16,30 @@ export interface DataPoint {
 	y: number;
 }
 
+export type TransactionType = "income" | "expense";
+
+/**
+ * Represents a point on the category chart with a date string x-axis, a numeric y-axis, and a category label.
+ */
+export interface CategoryPoint {
+	/**
+	 * The date string represented by this data point.
+	 */
+	x: string;
+	/**
+	 * The numeric value of this data point.
+	 */
+	y: number;
+	/**
+	 * The category label associated with this data point.
+	 */
+	category: string;
+	/**
+	 * The type of transaction, either an income or an expense.
+	 */
+	type: TransactionType;
+}
+
 /**
  * Represents a range of time that can be used to filter data.
  */
@@ -23,8 +47,6 @@ export type TimeRange = "all" | "month" | "year";
 
 /**
  * Retrieves all entries from the database, including their corresponding category names, sorted by date in ascending order.
- *
- * @returns An array of objects containing entry information
  */
 export async function load() {
 	const allEntries = await db
@@ -87,8 +109,30 @@ export async function load() {
 			});
 	}
 
+	const categoryEntries = await db
+		.select({
+			date: entries.date,
+			amount: entries.amount,
+			category: categories.name,
+			type: entries.type,
+		})
+		.from(entries)
+		.leftJoin(categories, eq(entries.category_id, categories.id))
+		.where(eq(entries.type, "expense"))
+		.orderBy(asc(entries.date));
+
+	const categoryPoints: CategoryPoint[] = categoryEntries
+		.filter((e): e is typeof e & { category: string } => e.category !== null && !!e.date)
+		.map((e) => ({
+			x: new Date(e.date + "T00:00:00").toISOString().split("T")[0],
+			y: Math.abs(e.amount),
+			category: e.category,
+			type: e.type,
+		}));
+
 	return {
 		netWorthChart: { points: netWorthPoints },
+		categoryChart: { points: categoryPoints },
 		summary: {
 			currentNetWorth: netWorthPoints.length > 0 ? netWorthPoints[netWorthPoints.length - 1].y : 0,
 			incomes,
