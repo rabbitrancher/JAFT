@@ -16,10 +16,12 @@
 
 	// lazy load the chart so Chart.js only runs in the browser
 	let NetWorthChartComponent = $state<Component<NetWorthChartProps> | null>(null);
-	let CategoryChartComponent = $state<Component<CategoryChartProps> | null>(null);
+	let ExpensesCategoryChartComponent = $state<Component<CategoryChartProps> | null>(null);
+	let IncomeCategoryChartComponent = $state<Component<CategoryChartProps> | null>(null);
 
 	let netWorthLoadError = $state<string | null>(null);
-	let categoryLoadError = $state<string | null>(null);
+	let expensesCategoryLoadError = $state<string | null>(null);
+	let incomeCategoryLoadError = $state<string | null>(null);
 
 	let selectedTimeRange = $state<TimeRange>("all");
 
@@ -56,7 +58,7 @@
 
 	onMount(async () => {
 		try {
-			// attach the separate page with information about the net worth graph
+			// attach the separate page with the net worth graph
 			const module = await import("./NetWorthGraph.svelte");
 			NetWorthChartComponent = module.default as Component<NetWorthChartProps>;
 		} catch (e) {
@@ -65,11 +67,20 @@
 		}
 
 		try {
-			// attach the separate page with information about the net worth graph
-			const module = await import("./PerCategoryGraph.svelte");
-			CategoryChartComponent = module.default as Component<CategoryChartProps>;
+			// attach the separate page with the expenses per category graphs
+			const module = await import("./ExpensesPerCategoryGraphs.svelte");
+			ExpensesCategoryChartComponent = module.default as Component<CategoryChartProps>;
 		} catch (e) {
-			categoryLoadError = "Failed to load chart. Please refresh the page.";
+			expensesCategoryLoadError = "Failed to load chart. Please refresh the page.";
+			console.log(e);
+		}
+
+		try {
+			// attach the separate page with the income per category graphs
+			const module = await import("./IncomePerCategoryGraphs.svelte");
+			IncomeCategoryChartComponent = module.default as Component<CategoryChartProps>;
+		} catch (e) {
+			expensesCategoryLoadError = "Failed to load chart. Please refresh the page.";
 			console.log(e);
 		}
 	});
@@ -79,8 +90,7 @@
 
 {#if data.netWorthChart.points.length === 0}
 	<p>
-		No entries yet — add some on the <a href={resolve("/entry")}>entry page</a> to see your net worth
-		over time.
+		No entries yet - add some on the <a href={resolve("/entry")}>entry page</a> to see some data!
 	</p>
 {:else}
 	<!-- Summary stats -->
@@ -125,14 +135,33 @@
 	{/if}
 
 	<!-- Expenses by category graphs-->
-	{#if categoryLoadError}
-		<p class="error">{categoryLoadError}</p>
+	{#if expensesCategoryLoadError}
+		<p class="error">{expensesCategoryLoadError}</p>
 	{:else}
 		<div class="chart-section">
 			<h2>Expenses by Category</h2>
 			<div class="chart-container">
-				{#if CategoryChartComponent}
-					<CategoryChartComponent
+				{#if ExpensesCategoryChartComponent}
+					<ExpensesCategoryChartComponent
+						points={data.categoryChart.points}
+						bind:timeRange={selectedTimeRange}
+					/>
+				{:else}
+					<p class="loading-text">Loading chart...</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Income by category graphs-->
+	{#if incomeCategoryLoadError}
+		<p class="error">{incomeCategoryLoadError}</p>
+	{:else}
+		<div class="chart-section">
+			<h2>Income by Category</h2>
+			<div class="chart-container">
+				{#if IncomeCategoryChartComponent}
+					<IncomeCategoryChartComponent
 						points={data.categoryChart.points}
 						bind:timeRange={selectedTimeRange}
 					/>
