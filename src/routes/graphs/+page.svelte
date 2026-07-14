@@ -2,17 +2,24 @@
 	import { resolve } from "$app/paths";
 	import { onMount } from "svelte";
 	import type { Component } from "svelte";
-	import type { DataPoint, TimeRange } from "./+page.server.js";
+	import type { CategoryPoint, DataPoint, TimeRange } from "./+page.server.js";
 	import { formatCurrency } from "$lib/utils/format.js";
 
 	let { data } = $props();
 
-	type ChartProps = { points: DataPoint[]; timeRange?: TimeRange };
+	type NetWorthChartProps = { points: DataPoint[]; timeRange?: TimeRange };
+
+	type CategoryChartProps = {
+		points: CategoryPoint[];
+		timeRange?: TimeRange;
+	};
 
 	// lazy load the chart so Chart.js only runs in the browser
-	let ChartComponent = $state<Component<ChartProps> | null>(null);
+	let NetWorthChartComponent = $state<Component<NetWorthChartProps> | null>(null);
+	let CategoryChartComponent = $state<Component<CategoryChartProps> | null>(null);
 
-	let loadError = $state<string | null>(null);
+	let netWorthLoadError = $state<string | null>(null);
+	let categoryLoadError = $state<string | null>(null);
 
 	let selectedTimeRange = $state<TimeRange>("all");
 
@@ -51,9 +58,18 @@
 		try {
 			// attach the separate page with information about the net worth graph
 			const module = await import("./NetWorthGraph.svelte");
-			ChartComponent = module.default as Component<ChartProps>;
+			NetWorthChartComponent = module.default as Component<NetWorthChartProps>;
 		} catch (e) {
-			loadError = "Failed to load chart. Please refresh the page.";
+			netWorthLoadError = "Failed to load chart. Please refresh the page.";
+			console.log(e);
+		}
+
+		try {
+			// attach the separate page with information about the net worth graph
+			const module = await import("./PerCategoryGraph.svelte");
+			CategoryChartComponent = module.default as Component<CategoryChartProps>;
+		} catch (e) {
+			categoryLoadError = "Failed to load chart. Please refresh the page.";
 			console.log(e);
 		}
 	});
@@ -90,14 +106,36 @@
 	</div>
 
 	<!-- Net worth graph-->
-	{#if loadError}
-		<p class="error">{loadError}</p>
+	{#if netWorthLoadError}
+		<p class="error">{netWorthLoadError}</p>
 	{:else}
 		<div class="chart-section">
 			<h2>Net Worth Over Time</h2>
 			<div class="chart-container">
-				{#if ChartComponent}
-					<ChartComponent points={data.netWorthChart.points} bind:timeRange={selectedTimeRange} />
+				{#if NetWorthChartComponent}
+					<NetWorthChartComponent
+						points={data.netWorthChart.points}
+						bind:timeRange={selectedTimeRange}
+					/>
+				{:else}
+					<p class="loading-text">Loading chart...</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Expenses by category graphs-->
+	{#if categoryLoadError}
+		<p class="error">{categoryLoadError}</p>
+	{:else}
+		<div class="chart-section">
+			<h2>Expenses by Category</h2>
+			<div class="chart-container">
+				{#if CategoryChartComponent}
+					<CategoryChartComponent
+						points={data.categoryChart.points}
+						bind:timeRange={selectedTimeRange}
+					/>
 				{:else}
 					<p class="loading-text">Loading chart...</p>
 				{/if}
