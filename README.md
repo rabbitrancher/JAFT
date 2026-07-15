@@ -13,19 +13,20 @@ income!) quickly and intuitively. The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
 - **Type**: expense or income
-- **Category**: A predefined category for the entry, with possibilities determined by the values in
-  [`src/lib/categories.ts`](src/lib/categories.ts). A fuzzy search (thanks fuse!) helps you see what
-  the possible categories are when you get to make an entry. If you enable dynamic categories in
-  settings, you can also add new ones on the fly.
+- **Category**: A predefined category for the entry, with possibilities determined by the values
+  in [`src/lib/categories.ts`](src/lib/categories.ts), selectable via a dropdown. If you
+  enable dynamic categories in settings, you can also add new ones on the fly.
 - **Description**: Something a bit more detailed than 'Category', but could still come up again.
-  Like specifying which brand of gas station you went to. And there's a fuzzy search here too don't
-  worry.
+  Like specifying which brand of gas station you went to. There's a fuzzy search here to
+  help keep things concise, don't worry. it's also optional by default, so make sure you enable "require description" in settings if you want to enforce it.
 - **Notes**: Freeform for any extra information you want. Maybe you went to Kroger and bought $300
   of cheese and want your tracker to be aware.
 - **Date**: When the transaction occurs! And it defaults to the current date because clicking is
   something to be avoided.
 
 ## What Can It Do?
+
+### Table
 
 Beyond just storing entries, the data table has a few tricks:
 
@@ -36,6 +37,20 @@ Beyond just storing entries, the data table has a few tricks:
   checkmark to save.
 - **Delete** entries with a two-click confirmation so you don't accidentally remove the charge for that engagement ring.
 - **Customize columns** from the settings page - hide ones you don't care about.
+
+### Graphs
+
+Numbers in a table are fine, but sometimes you want the bigger picture. The Graphs page has:
+
+- **Net Worth Over Time**: a zoomable, pannable line chart of your running net worth. Click any
+  point to jump to that date in the table.
+- **Expenses & Income by Category**: a donut and bar chart breakdown of where your money's actually
+  going (or coming from), with a filter so you can hide categories you don't care about right now.
+- **Trend Cards**: this month vs. last month, vs. your 3-month average, year-to-date total, and a
+  projection of where this month's headed at your current pace. Turns out knowing you're on track to
+  blow your budget on day 12 instead of day 30 is pretty useful.
+- **Popular Descriptions**: your most frequent and highest-spend entries, ranked, so you can spot
+  the recurring stuff (looking at you, Spotify) without digging through the table.
 
 ## How Do I Use It?
 
@@ -144,6 +159,7 @@ And then go to whatever address it tells you to in the terminal and try it out!
   [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
 - [Fuse.js](https://fusejs.io) - fuzzy search for autocomplete
 - [Lucide Svelte](https://lucide.dev) - icons
+- [Chart.js](https://www.chartjs.org) - charts for the Graphs page
 
 ### Project Structure
 

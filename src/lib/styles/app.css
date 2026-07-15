@@ -38,6 +38,10 @@
 	--border: var(--accent-2);
 	--border-subtle: var(--dark-2);
 
+	--graph-line: var(--primary);
+
+	--bg-alpha: color-mix(in srgb, var(--dark-2) 70%, transparent);
+
 	--success: var(--status-success);
 	--error: var(--status-error);
 
@@ -60,12 +64,11 @@
 
 	--gap-hero: 1rem;
 	--gap-button-row: 7rem;
-	--gap-field: 0.5rem;
+	--gap-field: 1rem;
 	--margin-field: 0.75rem;
 	--margin-table: 1rem;
 	--padding-hero: 2rem;
 
-	--label-width: 90px;
 	--row-height: 2.5rem;
 	--search-width: 200px;
 	--search-height: 1.5rem;
@@ -79,6 +82,13 @@
 body {
 	background-color: var(--bg);
 	color: var(--text);
+}
+
+.logo {
+	width: 32px;
+	height: 32px;
+	image-rendering: pixelated;
+	aspect-ratio: 1 / 1;
 }
 
 /* -- Navigation -- */
@@ -101,6 +111,11 @@ nav {
 
 .nav-a:hover {
 	color: rgb(from var(--bg) 100 100 100);
+}
+
+.nav-bar {
+	display: flex;
+	gap: 30px;
 }
 
 /* -- Layout -- */
@@ -187,11 +202,26 @@ nav {
 
 /* -- Forms -- */
 .field {
+	display: contents;
+}
+
+.entry-form {
 	display: grid;
-	grid-template-columns: var(--label-width) 1fr;
+	grid-template-columns: max-content 1fr;
 	align-items: center;
-	gap: var(--gap-field);
+	gap: var(--gap-field) var(--gap-field);
 	margin-bottom: var(--margin-field);
+	width: 100%;
+	max-width: 300px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.entry-form .button,
+.entry-form .success,
+.entry-form .error {
+	grid-column: 1 / -1;
+	justify-self: center;
 }
 
 .autocomplete {
@@ -225,6 +255,7 @@ textarea {
 	margin: 0;
 	padding: 0;
 	z-index: var(--z-suggestions);
+	grid-column: 2;
 }
 
 .suggestions li button {
@@ -304,11 +335,17 @@ tr {
 td.edit {
 	background-color: var(--dark-3);
 	color: var(--accent-2);
+	overflow: visible;
 }
 
 th.selected {
 	background-color: var(--dark-2);
 	color: var(--dark-3);
+}
+
+tr.highlighted td {
+	background-color: var(--accent-1);
+	transition: background-color 0.3s ease;
 }
 
 td.icon-col,
@@ -333,6 +370,285 @@ td select {
 	box-sizing: border-box;
 	width: 100%;
 	margin: 0;
+}
+
+/* -- Info Cards --*/
+.summary-row {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.summary-card {
+	flex: 1;
+	background-color: var(--bg-elevated);
+	border-radius: var(--radius-md);
+	padding: 1rem 1.5rem;
+}
+
+.summary-card-capped {
+	flex: 1 1 180px;
+	max-width: 220px;
+	background-color: var(--bg-elevated);
+	border-radius: var(--radius-md);
+	padding: 1rem 1.5rem;
+}
+
+.summary-label {
+	color: var(--text-muted);
+	font-size: 0.9rem;
+	margin: 0 0 0.25rem;
+}
+
+.summary-value {
+	font-size: 1.5rem;
+	font-weight: var(--font-weight-button);
+	margin: 0;
+}
+
+.positive {
+	color: var(--success);
+}
+
+.negative {
+	color: var(--error);
+}
+
+.chart-section {
+	margin-bottom: 2rem;
+}
+
+.loading-text {
+	color: var(--text-muted);
+}
+
+.summary-sublabel {
+	color: var(--text-muted);
+	font-size: 0.8rem;
+	margin: 0.15rem 0 0;
+}
+
+/* -- Graphs -- */
+.chart-section {
+	margin-bottom: 2rem;
+}
+
+.chart-container {
+	margin: 0 auto;
+	width: 90%;
+	height: 400px;
+}
+
+.chart-container-stacked-graphs {
+	margin: 0 auto;
+	width: 90%;
+	height: auto;
+}
+
+.loading-text {
+	color: var(--text-muted);
+}
+
+.chart-wrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.reset-zoom {
+	position: absolute;
+	top: 1.25rem;
+	right: 0.5rem;
+	font-size: 0.8rem;
+	padding: 0.25rem 0.75rem;
+}
+
+.chart-controls {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.category-graphs {
+	display: grid;
+	grid-template-columns: minmax(280px, 350px) 1fr;
+	gap: 2rem;
+	align-items: center;
+}
+
+.donut-chart,
+.bar-chart {
+	position: relative;
+	height: 350px;
+	min-width: 0;
+	overflow: hidden;
+}
+
+/* switch to a stacked format if the screen is too small */
+@media (max-width: 900px) {
+	.category-graphs {
+		grid-template-columns: 1fr;
+		grid-auto-rows: auto;
+	}
+
+	.donut-chart {
+		height: 280px;
+	}
+
+	.bar-chart {
+		height: 400px;
+	}
+}
+
+.graph-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin-top: 1rem;
+	margin-bottom: 1.5rem;
+	justify-content: center;
+}
+
+.controls-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+/* Dropdown Positioning */
+.dropdown-container {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	left: auto;
+	background-color: var(--bg);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: 1rem;
+	z-index: calc(var(--z-suggestions) + 40);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+	min-width: 40rem;
+}
+
+.dropdown-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	border-bottom: 1px solid var(--border-subtle);
+	padding-bottom: 0.5rem;
+}
+
+.dropdown-header h4 {
+	margin: 0;
+	font-size: 1rem;
+	color: var(--text);
+}
+
+.close-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 1.2rem;
+}
+
+.close-btn:hover {
+	color: var(--text);
+}
+
+/* Checkbox Grid */
+.checkbox-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+	gap: 12px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-muted);
+	transition: color 0.2s ease;
+	user-select: none;
+}
+
+.checkbox-label:hover {
+	color: var(--text);
+}
+
+.checkbox-label input[type="checkbox"] {
+	cursor: pointer;
+	width: 16px;
+	height: 16px;
+	accent-color: var(--primary);
+}
+
+/* -- Popular table -- */
+.popular-descriptions {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 0.6rem;
+	max-height: min(600px, 70vh);
+	overflow-y: auto;
+	padding-right: 0.25rem;
+	align-content: start;
+}
+
+.popular-row {
+	background-color: var(--bg-elevated);
+	border-radius: var(--radius-md);
+	padding: 0.5rem 0.75rem;
+}
+
+.popular-row-header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 0.25rem;
+}
+
+.popular-description {
+	font-weight: var(--font-weight-button);
+}
+
+.popular-count {
+	color: var(--text-muted);
+	font-size: 0.85rem;
+}
+
+.popular-bar-track {
+	height: 4px;
+	border-radius: var(--radius-sm);
+	background-color: var(--border-subtle);
+	overflow: hidden;
+	margin-bottom: 0.15rem;
+}
+
+.popular-bar-fill {
+	height: 100%;
+	background-color: var(--primary);
+	border-radius: var(--radius-sm);
+}
+
+.popular-total {
+	font-size: 0.75rem;
+	color: var(--text-muted);
 }
 
 /* -- Settings -- */

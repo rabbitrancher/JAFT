@@ -7,42 +7,34 @@
 
 	let categoriesEnforced = $state(true);
 
-	// on page load, if there's no local storage for if categories have be enforced, assume they are
+	let descriptionRequired = $state<boolean>(false);
+
+	// on page load, if there's no local storage for if categories have be enforced, assume they are. Additionally, if there's no local storage for if a description is required, assume it is not.
 	onMount(() => {
-		const saved = localStorage.getItem("categories_enforced");
-		if (saved) {
-			let parsed = JSON.parse(saved);
-			categoriesEnforced = parsed;
+		const categoriesEnforcedSaved = localStorage.getItem("categories_enforced");
+		if (categoriesEnforcedSaved != null) {
+			const parsedEnforcement = JSON.parse(categoriesEnforcedSaved);
+			categoriesEnforced = parsedEnforcement;
+		}
+
+		const descriptionRequiredSaved = localStorage.getItem("description_required");
+		if (descriptionRequiredSaved != null) {
+			const parsedRequired = JSON.parse(descriptionRequiredSaved);
+			descriptionRequired = parsedRequired;
 		}
 	});
 
-	// category autocomplete
-	let category_input = $state("");
-	let showCategorySuggestions = $state(false);
-
-	const categoryFuse = $derived(new Fuse(data.categories, { threshold: 0.4 }));
-
-	let category_suggestions = $derived(
-		category_input.length > 0
-			? categoryFuse
-					.search(category_input)
-					// only closest 5
-					.slice(0, 5)
-					.map((r) => r.item)
-			: [],
-	);
-
-	function selectCategory(value: string) {
-		category_input = value;
-		showCategorySuggestions = false;
-	}
-
-	// description autocomplete
 	let description_input = $state("");
 	let showDescriptionSuggestions = $state(false);
 
+	/**
+	 * A Fuse for searching description suggestions.
+	 */
 	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
 
+	/**
+	 * Holds closest descriptions to the input
+	 */
 	let description_suggestions = $derived(
 		description_input.length > 0
 			? descFuse
@@ -53,6 +45,11 @@
 			: [],
 	);
 
+	/**
+	 * Handles selection of a description suggestion.
+	 *
+	 * @param {string} value The selected description suggestion.
+	 */
 	function selectDescription(value: string) {
 		description_input = value;
 		showDescriptionSuggestions = false;
@@ -62,7 +59,14 @@
 	const today = new Date().toISOString().split("T")[0];
 </script>
 
-<form method="POST" class="hero" use:enhance>
+<!--stores all unique categories from the sql db-->
+<datalist id="categories">
+	{#each data.categories.sort() as category (category)}
+		<option value={category}></option>
+	{/each}
+</datalist>
+
+<form method="POST" class="hero entry-form" use:enhance>
 	<div class="field">
 		<label for="amount">Amount:</label>
 		<input type="number" id="amount" name="amount" placeholder="($)" step="0.01" required />
@@ -79,61 +83,47 @@
 	<!-- use a hidden field to transfer browser data (localStorage) to the server -->
 	<input type="hidden" name="categories_enforced" value={categoriesEnforced} />
 
-	<div class="field autocomplete">
+	<div class="field">
 		<label for="category">Category:</label>
 		<input
 			type="text"
+			list="categories"
 			id="category"
 			name="category"
-			bind:value={category_input}
-			onfocus={() => (showCategorySuggestions = true)}
-			onblur={() => (showCategorySuggestions = false)}
 			autocomplete="off"
 			required
 		/>
-		{#if showCategorySuggestions && category_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each category_suggestions as suggestion (suggestion)}
-					<li>
-						<button
-							type="button"
-							// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
-							onmousedown={() => selectCategory(suggestion)}
-						>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
 	</div>
 
-	<div class="field autocomplete">
+	<div class="field">
 		<label for="description">Description:</label>
-		<input
-			type="text"
-			id="description"
-			name="description"
-			bind:value={description_input}
-			onfocus={() => (showDescriptionSuggestions = true)}
-			onblur={() => (showDescriptionSuggestions = false)}
-			autocomplete="off"
-		/>
-		{#if showDescriptionSuggestions && description_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each description_suggestions as suggestion (suggestion)}
-					<li>
-						<button
-							type="button"
-							// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
-							onmousedown={() => selectDescription(suggestion)}
-						>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		<div class="autocomplete">
+			<input
+				type="text"
+				id="description"
+				name="description"
+				bind:value={description_input}
+				onfocus={() => (showDescriptionSuggestions = true)}
+				onblur={() => (showDescriptionSuggestions = false)}
+				autocomplete="off"
+				required={descriptionRequired}
+			/>
+			{#if showDescriptionSuggestions && description_suggestions.length > 0}
+				<ul class="suggestions">
+					{#each description_suggestions as suggestion (suggestion)}
+						<li>
+							<button
+								type="button"
+								// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
+								onmousedown={() => selectDescription(suggestion)}
+							>
+								{suggestion}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
 	<div class="field">
@@ -146,6 +136,7 @@
 		<input type="date" id="date" name="date" value={today} required />
 	</div>
 
+	<div></div>
 	<button type="submit" class="button">Save Entry</button>
 
 	{#if form?.success}
