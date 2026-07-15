@@ -4,7 +4,7 @@
 </script>
 
 <div class="hero">
-	<h1>Welcome to JABA!</h1>
+	<h1>Welcome to JAFT!</h1>
 	<div class="button-row">
 		<a href={resolve("/entry")} class="button">Enter Entry</a>
 		<a href={resolve("/table")} class="button">View Data Table</a>

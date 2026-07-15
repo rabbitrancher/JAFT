@@ -38,5 +38,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ github.ref_type == 'tag' && format('rabbitrancher/jaba:{0}', steps.version.outputs.VERSION) || '' }}
-            ${{ github.ref_type == 'tag' && 'rabbitrancher/jaba:latest' || 'rabbitrancher/jaba:dev' }}
+            ${{ github.ref_type == 'tag' && format('rabbitrancher/jaft:{0}', steps.version.outputs.VERSION) || '' }}
+            ${{ github.ref_type == 'tag' && 'rabbitrancher/jaft:latest' || 'rabbitrancher/jaft:dev' }}
