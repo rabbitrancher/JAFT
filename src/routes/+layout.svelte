@@ -9,7 +9,7 @@
 
 <svelte:head>
 	<link rel="icon" href={logo} />
-	<title>JABA</title>
+	<title>JAFT</title>
 </svelte:head>
 <nav>
 	<div class="nav-bar">

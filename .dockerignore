@@ -1,6 +1,6 @@
 node_modules
 .svelte-kit
-budget.db
+finances.db
 .env
 package-lock.json
 .git

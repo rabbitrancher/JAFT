@@ -1,4 +1,4 @@
-# Just Another Budget App - JABA
+# Just Another Finance Tracker - JAFT
 
 I decided that using a google form to record and store all my expenses was boring. So why not put my
 computer science degree to good use??
@@ -8,7 +8,7 @@ and want to use it go right ahead.
 
 ## What Is This?
 
-Not to be confused with any Hutts, JABA is a simple webapp that allows you to record expenses (and
+JAFT is a simple webapp that allows you to record expenses (and
 income!) quickly and intuitively. The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
@@ -58,7 +58,7 @@ You actually want to? Awesome!
 
 ### Docker (Recommended)
 
-JABA is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), so it should
+JAFT is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), so it should
 run on pretty much anything. [QEMU](https://www.qemu.org/) helped make that possible, so kudos to
 them.
 
@@ -81,22 +81,22 @@ Two image tags are available:
 
 ```bash
    mkdir -p /path/to/storage
-   touch /path/to/storage/budget.db
+   touch /path/to/storage/finances.db
 ```
 
 2. Add to your `docker-compose.yml`:
 
 ```yaml
 services:
-  jaba:
-    container_name: jaba
-    image: rabbitrancher/jaba:latest
+  jaft:
+    container_name: jaft
+    image: rabbitrancher/jaft:latest
     ports:
       - "8389:3000"
     environment:
       - ORIGIN=http://your-ip:8389
     volumes:
-      - /path/to/storage/budget.db:/app/budget.db
+      - /path/to/storage/finances.db:/app/finances.db
     restart: unless-stopped
 ```
 
@@ -127,8 +127,8 @@ If you'd rather just run it on your machine without Docker, here's how.
 #### Installation
 
 ```bash
-git clone https://github.com/rabbitrancher/JABA.git
-cd JABA
+git clone https://github.com/rabbitrancher/JAFT.git
+cd JAFT
 npm install
 ```
 
@@ -175,5 +175,8 @@ So you don't get lost finding the important stuff I hid around:
 MIT
 
 ## Other Relevant Information
+
+Previously this was 'JABA' before I realized it was more of a finance tracker than a budget app.
+Thus, past releases were under the dockerhub repo rabbitrancher/jaba, but I have deprecated those dockerhub images.
 
 I hope you have a great day :sunglasses:

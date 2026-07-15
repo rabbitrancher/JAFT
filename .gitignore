@@ -5,7 +5,7 @@ node_modules
 .wrangler
 .svelte-kit/
 build/
-budget.db
+finances.db
 
 # Vite
 vite.config.js.timestamp-*
