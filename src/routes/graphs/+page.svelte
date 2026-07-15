@@ -4,6 +4,8 @@
 	import type { Component } from "svelte";
 	import type { CategoryPoint, DataPoint, TimeRange } from "./+page.server.js";
 	import { formatCurrency } from "$lib/utils/format.js";
+	import TrendCards from "./TrendCards.svelte";
+	import PopularDescriptions from "./PopularDescriptions.svelte";
 
 	let { data } = $props();
 
@@ -134,13 +136,19 @@
 		</div>
 	{/if}
 
+	<!-- Trends cards -->
+	<div class="chart-section">
+		<h2>Spending Trends</h2>
+		<TrendCards summary={data.trendCards.summary} />
+	</div>
+
 	<!-- Expenses by category graphs-->
 	{#if expensesCategoryLoadError}
 		<p class="error">{expensesCategoryLoadError}</p>
 	{:else}
 		<div class="chart-section">
 			<h2>Expenses by Category</h2>
-			<div class="chart-container">
+			<div class="chart-container-stacked-graphs">
 				{#if ExpensesCategoryChartComponent}
 					<ExpensesCategoryChartComponent
 						points={data.categoryChart.points}
@@ -159,7 +167,7 @@
 	{:else}
 		<div class="chart-section">
 			<h2>Income by Category</h2>
-			<div class="chart-container">
+			<div class="chart-container-stacked-graphs">
 				{#if IncomeCategoryChartComponent}
 					<IncomeCategoryChartComponent
 						points={data.categoryChart.points}
@@ -171,4 +179,10 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Popular Descriptions grid -->
+	<div class="chart-section">
+		<h2>Popular Descriptions</h2>
+		<PopularDescriptions descriptions={data.popularDescriptions} />
+	</div>
 {/if}
