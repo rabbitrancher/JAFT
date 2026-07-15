@@ -1,4 +1,4 @@
-# Just Another Budget App - JABA
+# Just Another Finance Tracker - JAFT
 
 I decided that using a google form to record and store all my expenses was boring. So why not put my
 computer science degree to good use??
@@ -8,21 +8,49 @@ and want to use it go right ahead.
 
 ## What Is This?
 
-Not to be confused with any Hutts, JABA is a simple webapp that allows you to record expenses (and
+JAFT is a simple webapp that allows you to record expenses (and
 income!) quickly and intuitively. The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
 - **Type**: expense or income
-- **Category**: A predefined category for the entry, with possibilities determined by the values in
-  [`src/lib/categories.ts`](src/lib/categories.ts). A fuzzy search (thanks fuse!) helps you see what
-  the possible categories are when you get to make an entry.
+- **Category**: A predefined category for the entry, with possibilities determined by the values
+  in [`src/lib/categories.ts`](src/lib/categories.ts), selectable via a dropdown. If you
+  enable dynamic categories in settings, you can also add new ones on the fly.
 - **Description**: Something a bit more detailed than 'Category', but could still come up again.
-  Like specifying which brand of gas station you went to. And there's a fuzzy search here too don't
-  worry.
+  Like specifying which brand of gas station you went to. There's a fuzzy search here to
+  help keep things concise, don't worry. it's also optional by default, so make sure you enable "require description" in settings if you want to enforce it.
 - **Notes**: Freeform for any extra information you want. Maybe you went to Kroger and bought $300
   of cheese and want your tracker to be aware.
 - **Date**: When the transaction occurs! And it defaults to the current date because clicking is
   something to be avoided.
+
+## What Can It Do?
+
+### Table
+
+Beyond just storing entries, the data table has a few tricks:
+
+- **Sort** by any visible column - click the header, click again to flip direction. Standard header sorting stuff.
+- **Search** across visible text columns (category, description, and notes) with fuzzy
+  matching, so typos aren't the end of the world.
+- **Edit** any entry inline - click the pencil, change what you want, click the
+  checkmark to save.
+- **Delete** entries with a two-click confirmation so you don't accidentally remove the charge for that engagement ring.
+- **Customize columns** from the settings page - hide ones you don't care about.
+
+### Graphs
+
+Numbers in a table are fine, but sometimes you want the bigger picture. The Graphs page has:
+
+- **Net Worth Over Time**: a zoomable, pannable line chart of your running net worth. Click any
+  point to jump to that date in the table.
+- **Expenses & Income by Category**: a donut and bar chart breakdown of where your money's actually
+  going (or coming from), with a filter so you can hide categories you don't care about right now.
+- **Trend Cards**: this month vs. last month, vs. your 3-month average, year-to-date total, and a
+  projection of where this month's headed at your current pace. Turns out knowing you're on track to
+  blow your budget on day 12 instead of day 30 is pretty useful.
+- **Popular Descriptions**: your most frequent and highest-spend entries, ranked, so you can spot
+  the recurring stuff (looking at you, Spotify) without digging through the table.
 
 ## How Do I Use It?
 
@@ -30,9 +58,14 @@ You actually want to? Awesome!
 
 ### Docker (Recommended)
 
-JABA is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), so it should
+JAFT is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), so it should
 run on pretty much anything. [QEMU](https://www.qemu.org/) helped make that possible, so kudos to
 them.
+
+Two image tags are available:
+
+- `latest` - stable releases, what you probably want
+- `dev` - built automatically on every merge to the dev branch, so it's cutting-edge but might have bugs and such
 
 #### Prerequisites
 
@@ -46,35 +79,35 @@ them.
    I think technically you could skip this step, but then you might end up with some wacky
    permissions so you might as well run it
 
-  ```bash
-  mkdir -p /path/to/storage
-  touch /path/to/storage/budget.db
-  ```
+```bash
+   mkdir -p /path/to/storage
+   touch /path/to/storage/finances.db
+```
 
 2. Add to your `docker-compose.yml`:
 
-  ```yaml
-  services:
-    jaba:
-      container_name: jaba
-      image: rabbitrancher/jaba:latest
-      ports:
-        - '8389:3000'
-      environment:
-        - ORIGIN=http://your-ip:8389
-      volumes:
-        - /path/to/storage/budget.db:/app/budget.db
-      restart: unless-stopped
-  ```
+```yaml
+services:
+  jaft:
+    container_name: jaft
+    image: rabbitrancher/jaft:latest
+    ports:
+      - "8389:3000"
+    environment:
+      - ORIGIN=http://your-ip:8389
+    volumes:
+      - /path/to/storage/finances.db:/app/finances.db
+    restart: unless-stopped
+```
 
 3. Pull and start:
 
-  ```bash
-  docker compose up -d
-  ```
+```bash
+   docker compose up -d
+```
 
-  The app will be available at `http://your-ip:8389`. On first start, migrations and category seeding
-  will run automatically, so there should be no manual setup needed.
+The app will be available at `http://your-ip:8389`. On first start, migrations and category
+seeding will run automatically, so there should be no manual setup needed.
 
 #### Updating
 
@@ -94,8 +127,8 @@ If you'd rather just run it on your machine without Docker, here's how.
 #### Installation
 
 ```bash
-git clone https://github.com/rabbitrancher/JABA.git
-cd JABA
+git clone https://github.com/rabbitrancher/JAFT.git
+cd JAFT
 npm install
 ```
 
@@ -126,6 +159,7 @@ And then go to whatever address it tells you to in the terminal and try it out!
   [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
 - [Fuse.js](https://fusejs.io) - fuzzy search for autocomplete
 - [Lucide Svelte](https://lucide.dev) - icons
+- [Chart.js](https://www.chartjs.org) - charts for the Graphs page
 
 ### Project Structure
 
@@ -141,5 +175,8 @@ So you don't get lost finding the important stuff I hid around:
 MIT
 
 ## Other Relevant Information
+
+Previously this was 'JABA' before I realized it was more of a finance tracker than a budget app.
+Thus, past releases were under the dockerhub repo rabbitrancher/jaba, but I have deprecated those dockerhub images.
 
 I hope you have a great day :sunglasses:

@@ -1,49 +1,51 @@
-export const CATEGORIES = [
+export const BASE_CATEGORIES = [
 	// Income
-	'Paycheck',
-	'Reimbursement',
-	'Gift Received',
+	"Paycheck",
+	"Reimbursement",
+	"Gift Received",
 
 	// Housing
-	'Rent / Mortgage',
-	'Utilities',
-	'Internet',
-	'Home Insurance',
+	"Rent / Mortgage",
+	"Utilities",
+	"Internet",
+	"Home Insurance",
 
 	// Food
-	'Groceries',
-	'Restaurants',
+	"Groceries",
+	"Restaurants",
 
 	// Transport
-	'Gas',
-	'Parking',
+	"Gas",
+	"Parking",
+	"Car Insurance",
 
 	// Subscriptions
-	'Streaming',
-	'Software',
-	'Gym / Fitness',
+	"Streaming",
+	"Phone Plan",
+	"Software",
+	"Gym / Fitness",
 
 	// Health
-	'Doctor / Dentist',
-	'Pharmacy',
+	"Doctor / Dentist",
+	"Pharmacy",
 
 	// Shopping
-	'Clothing',
-	'Electronics',
-	'Household',
+	"Clothing",
+	"Electronics",
+	"Household",
 
 	// Personal
-	'Haircut / Grooming',
-	'Entertainment',
-	'Hobbies',
+	"Haircut / Grooming",
+	"Entertainment",
+	"Hobbies",
 
 	// Savings
-	'Transfer',
+	"Transfer",
 
 	// Other
-	'Fees / Charges',
-	'Gift Given',
-	'Miscellaneous'
+	"Fees / Charges",
+	"Gift Given",
+	"Miscellaneous",
 ] as const;
 
-export type Category = (typeof CATEGORIES)[number];
+export type Category = (typeof BASE_CATEGORIES)[number];

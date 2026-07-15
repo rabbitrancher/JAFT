@@ -1,53 +1,72 @@
 <script lang="ts">
-	import Fuse from 'fuse.js';
+	import { enhance } from "$app/forms";
+	import Fuse from "fuse.js";
+	import { onMount } from "svelte";
 
 	let { form, data } = $props();
 
-	// Category autocomplete
-	let category_input = $state('');
-	let showCategorySuggestions = $state(false);
+	let categoriesEnforced = $state(true);
 
-	const categoryFuse = $derived(new Fuse(data.categories, { threshold: 0.4 }));
+	let descriptionRequired = $state<boolean>(false);
 
-	let category_suggestions = $derived(
-		category_input.length > 0
-			? categoryFuse
-					.search(category_input)
-					.slice(0, 5)
-					.map((r) => r.item)
-			: []
-	);
+	// on page load, if there's no local storage for if categories have be enforced, assume they are. Additionally, if there's no local storage for if a description is required, assume it is not.
+	onMount(() => {
+		const categoriesEnforcedSaved = localStorage.getItem("categories_enforced");
+		if (categoriesEnforcedSaved != null) {
+			const parsedEnforcement = JSON.parse(categoriesEnforcedSaved);
+			categoriesEnforced = parsedEnforcement;
+		}
 
-	function selectCategory(value: string) {
-		category_input = value;
-		showCategorySuggestions = false;
-	}
+		const descriptionRequiredSaved = localStorage.getItem("description_required");
+		if (descriptionRequiredSaved != null) {
+			const parsedRequired = JSON.parse(descriptionRequiredSaved);
+			descriptionRequired = parsedRequired;
+		}
+	});
 
-	// Description autocomplete
-	let description_input = $state('');
+	let description_input = $state("");
 	let showDescriptionSuggestions = $state(false);
 
+	/**
+	 * A Fuse for searching description suggestions.
+	 */
 	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
 
+	/**
+	 * Holds closest descriptions to the input
+	 */
 	let description_suggestions = $derived(
 		description_input.length > 0
 			? descFuse
 					.search(description_input)
+					// only closest 5
 					.slice(0, 5)
 					.map((r) => r.item)
-			: []
+			: [],
 	);
 
+	/**
+	 * Handles selection of a description suggestion.
+	 *
+	 * @param {string} value The selected description suggestion.
+	 */
 	function selectDescription(value: string) {
 		description_input = value;
 		showDescriptionSuggestions = false;
 	}
 
-	// Default date to today
-	const today = new Date().toISOString().split('T')[0];
+	// default date to today
+	const today = new Date().toISOString().split("T")[0];
 </script>
 
-<form method="POST" class="hero">
+<!--stores all unique categories from the sql db-->
+<datalist id="categories">
+	{#each data.categories.sort() as category (category)}
+		<option value={category}></option>
+	{/each}
+</datalist>
+
+<form method="POST" class="hero entry-form" use:enhance>
 	<div class="field">
 		<label for="amount">Amount:</label>
 		<input type="number" id="amount" name="amount" placeholder="($)" step="0.01" required />
@@ -61,53 +80,50 @@
 		</select>
 	</div>
 
-	<div class="field autocomplete">
+	<!-- use a hidden field to transfer browser data (localStorage) to the server -->
+	<input type="hidden" name="categories_enforced" value={categoriesEnforced} />
+
+	<div class="field">
 		<label for="category">Category:</label>
 		<input
 			type="text"
+			list="categories"
 			id="category"
 			name="category"
-			bind:value={category_input}
-			onfocus={() => (showCategorySuggestions = true)}
-			onblur={() => (showCategorySuggestions = false)}
 			autocomplete="off"
 			required
 		/>
-		{#if showCategorySuggestions && category_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each category_suggestions as suggestion (suggestion)}
-					<li>
-						<button type="button" onmousedown={() => selectCategory(suggestion)}>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
 	</div>
 
-	<div class="field autocomplete">
+	<div class="field">
 		<label for="description">Description:</label>
-		<input
-			type="text"
-			id="description"
-			name="description"
-			bind:value={description_input}
-			onfocus={() => (showDescriptionSuggestions = true)}
-			onblur={() => (showDescriptionSuggestions = false)}
-			autocomplete="off"
-		/>
-		{#if showDescriptionSuggestions && description_suggestions.length > 0}
-			<ul class="suggestions">
-				{#each description_suggestions as suggestion (suggestion)}
-					<li>
-						<button type="button" onmousedown={() => selectDescription(suggestion)}>
-							{suggestion}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		<div class="autocomplete">
+			<input
+				type="text"
+				id="description"
+				name="description"
+				bind:value={description_input}
+				onfocus={() => (showDescriptionSuggestions = true)}
+				onblur={() => (showDescriptionSuggestions = false)}
+				autocomplete="off"
+				required={descriptionRequired}
+			/>
+			{#if showDescriptionSuggestions && description_suggestions.length > 0}
+				<ul class="suggestions">
+					{#each description_suggestions as suggestion (suggestion)}
+						<li>
+							<button
+								type="button"
+								// use onmousedown because onBlur() would actually stop happening before on click takes effect, meaning nothing would be selected
+								onmousedown={() => selectDescription(suggestion)}
+							>
+								{suggestion}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
 	<div class="field">
@@ -120,6 +136,7 @@
 		<input type="date" id="date" name="date" value={today} required />
 	</div>
 
+	<div></div>
 	<button type="submit" class="button">Save Entry</button>
 
 	{#if form?.success}
@@ -128,68 +145,3 @@
 		<p class="error">{form.error}</p>
 	{/if}
 </form>
-
-<style>
-	.field {
-		display: grid;
-		grid-template-columns: 90px 1fr;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.autocomplete {
-		position: relative;
-	}
-
-	.suggestions {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		background: white;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		z-index: 10;
-	}
-
-	.suggestions li button {
-		display: block;
-		width: 100%;
-		text-align: left;
-		padding: 0.5rem;
-		background: none;
-		border: none;
-		cursor: pointer;
-		color: #374151;
-	}
-
-	.suggestions li button:hover {
-		background-color: #f3f4f6;
-	}
-
-	select,
-	input,
-	textarea {
-		padding: 0.4rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	textarea {
-		resize: vertical;
-	}
-
-	.success {
-		color: #16a34a;
-	}
-
-	.error {
-		color: #dc2626;
-	}
-</style>
