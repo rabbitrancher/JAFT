@@ -256,6 +256,8 @@ textarea {
 	padding: 0;
 	z-index: var(--z-suggestions);
 	grid-column: 2;
+	max-height: 15rem;
+	overflow-y: auto;
 }
 
 .suggestions li button {
@@ -271,6 +273,16 @@ textarea {
 
 .suggestions li button:hover {
 	background-color: var(--bg-suggestions-hover);
+}
+
+.dropdown-arrow {
+	position: absolute;
+	right: 1px;
+	top: 50%;
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--bg);
+	font-size: 0.8rem;
 }
 
 /* -- Feedback -- */
@@ -339,8 +351,11 @@ td.edit {
 }
 
 th.selected {
+	display: flex;
 	background-color: var(--dark-2);
 	color: var(--dark-3);
+	align-items: center;
+	justify-content: space-between;
 }
 
 tr.highlighted td {

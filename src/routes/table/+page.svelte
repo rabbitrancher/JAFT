@@ -73,6 +73,27 @@
 	let editValues = $state<EditValues | null>(null);
 
 	/**
+	 * A state variable that tracks whether the category suggestions should be displayed.
+	 * When set to true, the category suggestions will be shown, and when set to false, they will be hidden.
+	 */
+	let showCategorySuggestions = $state(false);
+
+	/**
+	 * A derived store that generates a list of category suggestions based on the currently edited category.
+	 * If editValues is null, returns an empty array.
+	 * Otherwise, filters the categories based on the input (returns all if input is empty).
+	 */
+	let categorySuggestions = $derived(
+		editValues
+			? data.categories
+					.filter((c: string) =>
+						c.toLowerCase().includes((editValues?.category || "").toLowerCase()),
+					)
+					.sort()
+			: [],
+	);
+
+	/**
 	 * Stores whether the description suggestions should currently be shown or not.
 	 * Description suggestions are a list of previously entered descriptions that match the current input.
 	 */
@@ -417,7 +438,37 @@
 											<option value="income">Income</option>
 										</select>
 									{:else if header.header.key === "category"}
-										<input type="text" list="categories" bind:value={editValues.category} />
+										<div class="autocomplete">
+											<input
+												type="text"
+												bind:value={editValues!.category}
+												onfocus={() => (showCategorySuggestions = true)}
+												onblur={() => (showCategorySuggestions = false)}
+												autocomplete="off"
+											/>
+
+											<ChevronDown class="dropdown-arrow" size={14} strokeWidth="3.2" />
+
+											{#if showCategorySuggestions && categorySuggestions.length > 0}
+												<ul class="suggestions">
+													{#each categorySuggestions as suggestion (suggestion)}
+														<li>
+															<button
+																type="button"
+																onmousedown={() => {
+																	if (editValues) {
+																		editValues.category = suggestion;
+																	}
+																	showCategorySuggestions = false;
+																}}
+															>
+																{suggestion}
+															</button>
+														</li>
+													{/each}
+												</ul>
+											{/if}
+										</div>
 									{:else if header.header.key === "description"}
 										<div class="autocomplete">
 											<input
