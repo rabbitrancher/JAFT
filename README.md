@@ -8,8 +8,8 @@ and want to use it go right ahead.
 
 ## What Is This?
 
-JAFT is a simple webapp that allows you to record expenses (and
-income!) quickly and intuitively. The current stored fields are:
+JAFT is a simple webapp that allows you to record expenses (and income!) quickly and intuitively.
+The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
 - **Type**: expense or income
