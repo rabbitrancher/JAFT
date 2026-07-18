@@ -6,6 +6,7 @@ node_modules
 .svelte-kit/
 build/
 finances.db
+jaft.exe
 
 # Vite
 vite.config.js.timestamp-*

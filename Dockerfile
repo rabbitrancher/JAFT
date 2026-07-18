@@ -1,14 +1,11 @@
-FROM node:20-slim AS builder
+FROM oven/bun:1.3.14-slim AS builder
 WORKDIR /app
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
-COPY package*.json .
-RUN npm install
+COPY package.json .
+RUN bun install
 COPY . .
-RUN npm run build
-RUN npm prune --omit=dev
+RUN bun run build
 
-
-FROM gcr.io/distroless/nodejs20-debian12 AS runner
+FROM oven/bun:1.3.14-distroless AS runner
 WORKDIR /app
 COPY --from=builder /app/build build/
 COPY --from=builder /app/node_modules node_modules/

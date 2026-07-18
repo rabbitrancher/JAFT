@@ -88,7 +88,9 @@
 	});
 </script>
 
-<h1>Graphs</h1>
+<div class="header-row">
+	<h1>Graphs</h1>
+</div>
 
 {#if data.netWorthChart.points.length === 0}
 	<p>
