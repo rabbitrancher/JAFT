@@ -1,0 +1,158 @@
+name: Build Release and Docker Image
+
+on:
+  push:
+    tags:
+      - "v*"
+    branches:
+      - dev
+
+jobs:
+  build-executables:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        include:
+          - target: bun-windows-x64
+            os: windows-latest
+            outfile: jaft.exe
+            archive: jaft-windows.zip
+            icon_flag: "--windows-icon=./icon.ico"
+
+          - target: bun-darwin-arm64
+            os: ubuntu-latest
+            outfile: jaft
+            archive: jaft-macos.zip
+            icon_flag: ""
+
+          - target: bun-linux-x64
+            os: ubuntu-latest
+            outfile: jaft
+            archive: jaft-linux.zip
+            icon_flag: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build SvelteKit app
+        run: bun run build
+
+      - name: Convert PNG to ICO
+        if: matrix.os == 'windows-latest'
+        run: magick ./src/lib/assets/logo.png -define icon:auto-resize="256,128,64,48,32,16" icon.ico
+
+      - name: Compile launcher
+        run: bun build --compile --target=${{ matrix.target }} ${{ matrix.icon_flag }} ./src/launcher.ts --outfile ${{ matrix.outfile }}
+
+      - name: Prune devDependencies
+        shell: bash
+        run: |
+          rm -rf node_modules
+          bun install --production
+
+      - name: Package binary with build output (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: zip -r ${{ matrix.archive }} ${{ matrix.outfile }} build/ node_modules/ drizzle/
+
+      - name: Package binary with build output (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path ${{ matrix.outfile }}, build/, node_modules/, drizzle/ -DestinationPath ${{ matrix.archive }}
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive }}
+
+  build-dockers:
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=rabbitrancher/jaft,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest to file
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-dockers:
+    runs-on: ubuntu-latest
+    needs: build-dockers
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        if: github.ref_type == 'tag'
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          TAGS=""
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            TAGS="-t rabbitrancher/jaft:${{ steps.version.outputs.VERSION }} -t rabbitrancher/jaft:latest"
+          else
+            TAGS="-t rabbitrancher/jaft:dev"
+          fi
+
+          docker buildx imagetools create $TAGS $(printf 'rabbitrancher/jaft@sha256:%s ' *)

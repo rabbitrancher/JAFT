@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { ChevronDown } from "@lucide/svelte";
 	import Fuse from "fuse.js";
 	import { onMount } from "svelte";
 
@@ -23,6 +24,32 @@
 			descriptionRequired = parsedRequired;
 		}
 	});
+
+	let category_input = $state("");
+	let showCategorySuggestions = $state(false);
+
+	/**
+	 * Derives an array of category suggestions based on the user's input.
+	 *
+	 * The suggestions are filtered from the list of available categories,
+	 * and are sorted alphabetically. The filter is case-insensitive,
+	 * meaning it will match categories regardless of the case of the input.
+	 */
+	let category_suggestions = $derived(
+		data.categories
+			.filter((c: string) => c.toLowerCase().includes(category_input.toLowerCase()))
+			.sort(),
+	);
+
+	/**
+	 * Handles selection of a category suggestion.
+	 *
+	 * @param {string} value The selected category suggestion.
+	 */
+	function selectCategory(value: string) {
+		category_input = value;
+		showCategorySuggestions = false;
+	}
 
 	let description_input = $state("");
 	let showDescriptionSuggestions = $state(false);
@@ -59,13 +86,6 @@
 	const today = new Date().toISOString().split("T")[0];
 </script>
 
-<!--stores all unique categories from the sql db-->
-<datalist id="categories">
-	{#each data.categories.sort() as category (category)}
-		<option value={category}></option>
-	{/each}
-</datalist>
-
 <form method="POST" class="hero entry-form" use:enhance>
 	<div class="field">
 		<label for="amount">Amount:</label>
@@ -85,14 +105,32 @@
 
 	<div class="field">
 		<label for="category">Category:</label>
-		<input
-			type="text"
-			list="categories"
-			id="category"
-			name="category"
-			autocomplete="off"
-			required
-		/>
+		<div class="autocomplete">
+			<input
+				type="text"
+				id="category"
+				name="category"
+				bind:value={category_input}
+				onfocus={() => (showCategorySuggestions = true)}
+				onblur={() => (showCategorySuggestions = false)}
+				autocomplete="off"
+				required
+			/>
+
+			<ChevronDown class="dropdown-arrow" size={14} strokeWidth="3.2" />
+
+			{#if showCategorySuggestions && category_suggestions.length > 0}
+				<ul class="suggestions">
+					{#each category_suggestions as suggestion (suggestion)}
+						<li>
+							<button type="button" onmousedown={() => selectCategory(suggestion)}>
+								{suggestion}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
 	<div class="field">

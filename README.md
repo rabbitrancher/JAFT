@@ -8,8 +8,8 @@ and want to use it go right ahead.
 
 ## What Is This?
 
-JAFT is a simple webapp that allows you to record expenses (and
-income!) quickly and intuitively. The current stored fields are:
+JAFT is a simple webapp that allows you to record expenses (and income!) quickly and intuitively.
+The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
 - **Type**: expense or income
@@ -54,13 +54,20 @@ Numbers in a table are fine, but sometimes you want the bigger picture. The Grap
 
 ## How Do I Use It?
 
-You actually want to? Awesome!
+You actually want to? Awesome! There are a few ways to get this running depending on how much you like terminals.
 
-### Docker (Recommended)
+### Standalone Executable (Easiest)
 
-JAFT is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), so it should
-run on pretty much anything. [QEMU](https://www.qemu.org/) helped make that possible, so kudos to
-them.
+If you don't want to mess with Docker or command lines, you can just download the pre-built application.
+
+1. Go to the [Releases page](../../releases) and download the `.zip` for your operating system (Windows, macOS, or Linux).
+2. Extract the **entire** zip folder (it contains the executable, database migrations, and necessary production files).
+3. Run the `jaft` executable inside the extracted folder.
+4. Open your browser and go to the address it provides!
+
+### Docker (Recommended for Servers)
+
+JAFT is available as a multi-platform Docker image (`linux/amd64` and `linux/arm64`), natively built so it should run fast on pretty much anything.
 
 Two image tags are available:
 
@@ -80,30 +87,30 @@ Two image tags are available:
    permissions so you might as well run it
 
 ```bash
-   mkdir -p /path/to/storage
-   touch /path/to/storage/finances.db
+    mkdir -p /path/to/storage
+    touch /path/to/storage/finances.db
 ```
 
 2. Add to your `docker-compose.yml`:
 
-```yaml
-services:
-  jaft:
-    container_name: jaft
-    image: rabbitrancher/jaft:latest
-    ports:
-      - "8389:3000"
-    environment:
-      - ORIGIN=http://your-ip:8389
-    volumes:
-      - /path/to/storage/finances.db:/app/finances.db
-    restart: unless-stopped
+```bash
+    services:
+      jaft:
+        container_name: jaft
+        image: rabbitrancher/jaft:latest
+        ports:
+          - "8389:3000"
+        environment:
+          - ORIGIN=http://your-ip:8389
+        volumes:
+          - /path/to/storage/finances.db:/app/finances.db
+        restart: unless-stopped
 ```
 
 3. Pull and start:
 
 ```bash
-   docker compose up -d
+    docker compose up -d
 ```
 
 The app will be available at `http://your-ip:8389`. On first start, migrations and category
@@ -112,30 +119,30 @@ seeding will run automatically, so there should be no manual setup needed.
 #### Updating
 
 ```bash
-docker compose pull
-docker compose up -d
+    docker compose pull
+    docker compose up -d
 ```
 
 ### Running Locally
 
-If you'd rather just run it on your machine without Docker, here's how.
+If you'd rather run it from source on your machine, here's how.
 
 #### Prerequisites
 
-- Node.js 20+
+- [Bun](https://bun.sh/) (Node.js was getting boring)
 
 #### Installation
 
 ```bash
-git clone https://github.com/rabbitrancher/JAFT.git
-cd JAFT
-npm install
+    git clone [https://github.com/rabbitrancher/JAFT.git](https://github.com/rabbitrancher/JAFT.git)
+    cd JAFT
+    bun install
 ```
 
 #### Database Setup
 
 ```bash
-npm run db:push
+    bun run db:push
 ```
 
 This generates migrations, applies them, and seeds the categories table. If you want to change up
@@ -146,17 +153,18 @@ database, so be aware.
 #### Development
 
 ```bash
-npm run dev
+    bun run dev
 ```
 
 And then go to whatever address it tells you to in the terminal and try it out!
 
 ### Tech Stack
 
+- [Bun](https://bun.sh/) - fast all-in-one JavaScript runtime
 - [SvelteKit](https://kit.svelte.dev) - full-stack web framework
 - [Drizzle ORM](https://orm.drizzle.team) - type-safe database queries
 - [SQLite](https://sqlite.org) - local database via
-  [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
+  [bun:sqlite](https://bun.sh/docs/api/sqlite)
 - [Fuse.js](https://fusejs.io) - fuzzy search for autocomplete
 - [Lucide Svelte](https://lucide.dev) - icons
 - [Chart.js](https://www.chartjs.org) - charts for the Graphs page
@@ -175,8 +183,5 @@ So you don't get lost finding the important stuff I hid around:
 MIT
 
 ## Other Relevant Information
-
-Previously this was 'JABA' before I realized it was more of a finance tracker than a budget app.
-Thus, past releases were under the dockerhub repo rabbitrancher/jaba, but I have deprecated those dockerhub images.
 
 I hope you have a great day :sunglasses:
