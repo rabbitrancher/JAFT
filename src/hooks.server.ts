@@ -1,4 +1,4 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import { db } from "$lib/server/db";
 import { categories } from "$lib/server/db/schema";
 import { BASE_CATEGORIES } from "$lib/categories";
