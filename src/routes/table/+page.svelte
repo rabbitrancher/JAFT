@@ -288,6 +288,15 @@
 	}
 
 	/**
+	 * Automatically resets the to_account field to an empty string when the type is changed to a non-transfer type.
+	 */
+	$effect(() => {
+		if (editValues && editValues.type !== "transfer") {
+			editValues.to_account = "";
+		}
+	});
+
+	/**
 	 * Enables deletion of the currently edited row.
 	 * Sets a timeout to disable deletion after 3 seconds unless attempted again.
 	 */
@@ -449,16 +458,19 @@
 											{/each}
 										</select>
 									{:else if header.header.key === "to_account"}
-										<select bind:value={editValues.to_account}>
-											<!--'""' will be converted to null when form is processed-->
-											<option value="">None</option>
+										{#if editValues.type === "transfer"}
+											<select bind:value={editValues.to_account}>
+												<!--'""' will be converted to null when edit submission is processed-->
+												<option value="">None</option>
 
-											{#each data.accounts.filter((account) => account.name !== editValues?.account) as account (account.id)}
-												<option value={account.name}>
-													{account.name}
-												</option>
-											{/each}
-										</select>
+												{#each data.accounts.filter((account) => account.name !== editValues?.account) as account (account.id)}
+													<option value={account.name}>
+														{account.name}
+													</option>
+												{/each}
+											</select>
+										{:else}
+											<!--Note that there is an $effect that sets editValues.toAccount = "" if the editValues.type !== "transfer"-->{/if}
 									{:else if header.header.key === "category"}
 										<div class="autocomplete">
 											<input

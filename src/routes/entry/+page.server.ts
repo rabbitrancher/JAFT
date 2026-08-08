@@ -49,23 +49,30 @@ export const actions: Actions = {
 				return { success: false, error: "Unable to find target account" };
 			}
 
+			const transfer_id = await db
+				.select()
+				.from(categories)
+				.where(eq(categories.name, "Transfer"))
+				.get()?.id;
+
 			await db.insert(entries).values({
 				amount,
 				type,
 				account_id: db_account.id,
 				to_account_id: db_to_account.id,
-				category_id: null,
+				category_id: transfer_id,
 				description,
 				notes: notes || null,
 				date,
 			});
 		} else {
-			// Title Case the category input
-			const categoryName = toTitleCase(String(formData.get("category") || ""));
-
-			if (!categoryName) {
+			const categoryNameFormData = formData.get("category");
+			if (!categoryNameFormData) {
 				return { success: false, error: "Category is required" };
 			}
+
+			// make sure to Title Case the category input
+			const categoryName = toTitleCase(String(categoryNameFormData));
 
 			let db_category = await db
 				.select()

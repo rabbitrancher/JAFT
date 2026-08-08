@@ -111,14 +111,16 @@
 	<input type="hidden" name="categories_enforced" value={categoriesEnforced} />
 
 	<div class="field">
-		<label for="account"> Account</label>
+		<label for="account">
+			{#if entryType !== "transfer"}Account:{:else}From Account:{/if}</label
+		>
 		<select id="account" name="account" bind:value={accountId}>
 			{#each accounts as account (account.id)}
 				<option value={account.id}>{account.name}</option>
 			{/each}
 		</select>
 		{#if entryType === "transfer"}
-			<label for="target-account">Target Account:</label>
+			<label for="target-account">Into Account:</label>
 			<select id="target-account" name="target-account">
 				{#each accounts.filter((a) => a.id !== accountId) as account (account.id)}
 					<option value={account.id}>{account.name}</option>

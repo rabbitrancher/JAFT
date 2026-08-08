@@ -51,7 +51,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
 			return json({ error: "Can't have a negative amount" }, { status: 400 });
 		}
 	}
-	if (updates.type === "income" || updates.type === "expense") {
+	if (updates.type === "income" || updates.type === "expense" || updates.type === "transfer") {
 		safeUpdates.type = updates.type;
 	}
 	if (updates.description) {
@@ -89,6 +89,9 @@ export const PATCH: RequestHandler = async ({ request }) => {
 
 			safeUpdates.to_account_id = account.id;
 		}
+	}
+	if (safeUpdates.to_account_id === null && safeUpdates.type === "transfer") {
+		return json({ error: "Must provide a target account for a transfer entry" }, { status: 400 });
 	}
 	if (updates.category) {
 		// category is stored as a foreign key, so we need to look up the ID
