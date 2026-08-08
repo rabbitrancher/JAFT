@@ -84,6 +84,12 @@
 
 	// default date to today
 	const today = new Date().toISOString().split("T")[0];
+
+	type entryTypes = "expense" | "income" | "transfer";
+	let entryType = $state<entryTypes>();
+
+	const accounts = $derived(data.accounts);
+	let accountId = $state<number>();
 </script>
 
 <form method="POST" class="hero entry-form" use:enhance>
@@ -94,9 +100,10 @@
 
 	<div class="field">
 		<label for="type">Type:</label>
-		<select id="type" name="type" required>
+		<select id="type" name="type" required bind:value={entryType}>
 			<option value="expense">Expense</option>
 			<option value="income">Income</option>
+			<option value="transfer">Transfer</option>
 		</select>
 	</div>
 
@@ -104,33 +111,49 @@
 	<input type="hidden" name="categories_enforced" value={categoriesEnforced} />
 
 	<div class="field">
-		<label for="category">Category:</label>
-		<div class="autocomplete">
-			<input
-				type="text"
-				id="category"
-				name="category"
-				bind:value={category_input}
-				onfocus={() => (showCategorySuggestions = true)}
-				onblur={() => (showCategorySuggestions = false)}
-				autocomplete="off"
-				required
-			/>
+		<label for="account"> Account</label>
+		<select id="account" name="account" bind:value={accountId}>
+			{#each accounts as account (account.id)}
+				<option value={account.id}>{account.name}</option>
+			{/each}
+		</select>
+		{#if entryType === "transfer"}
+			<label for="target-account">Target Account:</label>
+			<select id="target-account" name="target-account">
+				{#each accounts.filter((a) => a.id !== accountId) as account (account.id)}
+					<option value={account.id}>{account.name}</option>
+				{/each}
+			</select>
+			<input type="hidden" name="category" value="Transfer" />
+		{:else}
+			<label for="category">Category:</label>
+			<div class="autocomplete">
+				<input
+					type="text"
+					id="category"
+					name="category"
+					bind:value={category_input}
+					onfocus={() => (showCategorySuggestions = true)}
+					onblur={() => (showCategorySuggestions = false)}
+					autocomplete="off"
+					required
+				/>
 
-			<ChevronDown class="dropdown-arrow" size={14} strokeWidth="3.2" />
+				<ChevronDown class="dropdown-arrow" size={14} strokeWidth="3.2" />
 
-			{#if showCategorySuggestions && category_suggestions.length > 0}
-				<ul class="suggestions">
-					{#each category_suggestions as suggestion (suggestion)}
-						<li>
-							<button type="button" onmousedown={() => selectCategory(suggestion)}>
-								{suggestion}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
+				{#if showCategorySuggestions && category_suggestions.length > 0}
+					<ul class="suggestions">
+						{#each category_suggestions as suggestion (suggestion)}
+							<li>
+								<button type="button" onmousedown={() => selectCategory(suggestion)}>
+									{suggestion}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<div class="field">
@@ -174,7 +197,6 @@
 		<input type="date" id="date" name="date" value={today} required />
 	</div>
 
-	<div></div>
 	<button type="submit" class="button">Save Entry</button>
 
 	{#if form?.success}

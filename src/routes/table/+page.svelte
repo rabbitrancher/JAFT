@@ -23,7 +23,7 @@
 	type FieldType<K> = K extends "amount"
 		? number
 		: K extends "type"
-			? "income" | "expense"
+			? "income" | "expense" | "transfer"
 			: string;
 
 	/**
@@ -249,7 +249,9 @@
 		editValues = {
 			date: entry.date,
 			amount: entry.amount,
-			type: entry.type as "income" | "expense",
+			type: entry.type as "income" | "expense" | "transfer",
+			account: entry.account,
+			to_account: entry.to_account ?? "",
 			category: entry.category ?? "",
 			description: entry.description ?? "",
 			notes: entry.notes ?? "",
@@ -436,6 +438,26 @@
 										<select bind:value={editValues.type}>
 											<option value="expense">Expense</option>
 											<option value="income">Income</option>
+											<option value="transfer">Transfer</option>
+										</select>
+									{:else if header.header.key === "account"}
+										<select bind:value={editValues.account}>
+											{#each data.accounts as account (account.id)}
+												<option value={account.name}>
+													{account.name}
+												</option>
+											{/each}
+										</select>
+									{:else if header.header.key === "to_account"}
+										<select bind:value={editValues.to_account}>
+											<!--'""' will be converted to null when form is processed-->
+											<option value="">None</option>
+
+											{#each data.accounts.filter((account) => account.name !== editValues?.account) as account (account.id)}
+												<option value={account.name}>
+													{account.name}
+												</option>
+											{/each}
 										</select>
 									{:else if header.header.key === "category"}
 										<div class="autocomplete">

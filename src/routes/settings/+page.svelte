@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { DEFAULT_SELECTED_HEADERS, type HeaderOption } from "$lib/tableHeaders";
 	import { onMount } from "svelte";
-	import { LockOpen } from "@lucide/svelte/icons";
+	import { Archive, ArchiveRestore, LockOpen, Pencil, Save } from "@lucide/svelte/icons";
 	import { Lock } from "@lucide/svelte/icons";
+	import { invalidateAll } from "$app/navigation";
+
+	let { data } = $props();
 
 	let headers = $state<HeaderOption[]>(DEFAULT_SELECTED_HEADERS);
 
@@ -81,6 +84,86 @@
 		dragIndex = null;
 	}
 
+	let activeAccounts = $derived(data.allAccounts.filter((account) => !account.archived));
+
+	let editAccountName = $state(<string | null>null);
+
+	let editAccountId = $state(<number | null>null);
+
+	let accountError = $state<string | null>(null);
+
+	async function archive(account: (typeof data.allAccounts)[number]) {
+		const result = await fetch("/settings", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				id: account.id,
+				archived: true,
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			accountError = json.error;
+		}
+		invalidateAll();
+	}
+
+	function editName(account: (typeof data.allAccounts)[number]) {
+		editAccountName = account.name;
+		editAccountId = account.id;
+	}
+
+	async function saveName(account: (typeof data.allAccounts)[number]) {
+		const result = await fetch("/settings", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				id: account.id,
+				name: editAccountName,
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			accountError = json.error;
+		}
+		editAccountName = null;
+		editAccountId = null;
+		invalidateAll();
+	}
+
+	async function makeNewAccount() {
+		const result = await fetch("/settings", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				name: "New Account",
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			accountError = json.error;
+		}
+		invalidateAll();
+	}
+
+	let archivedAccounts = $derived(data.allAccounts.filter((account) => account.archived));
+
+	async function unArchive(account: (typeof data.allAccounts)[number]) {
+		const result = await fetch("/settings", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				id: account.id,
+				archived: false,
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			accountError = json.error;
+		}
+		invalidateAll();
+	}
+
 	/**
 	 * Toggles the categories enforced setting, determining if categories must come from the predefined set of possibilities.
 	 * Updates the local storage with the new setting value.
@@ -125,6 +208,55 @@
 					{possibleHeader.header.label}
 				</button>
 			{/each}
+		</div>
+	</div>
+</div>
+
+<!--Manage Accounts-->
+<div class="hero">
+	<div class="settings-section">
+		<h2>Manage Accounts</h2>
+		{#if accountError}
+			<span class="error">{accountError}</span>
+		{/if}
+		<div class="account-row">
+			<div>
+				Active Accounts
+				{#each activeAccounts as account (account.id)}
+					<div class="account-card">
+						<span class="center-inside">
+							{#if editAccountId == account.id}
+								<span title="Save Changes">
+									<Save class="clickable" size={16} onclick={() => saveName(account)}></Save></span
+								>
+								<input type="text" bind:value={editAccountName} />
+							{:else}<span title="Edit Account Name"
+									><Pencil class="clickable" size={16} onclick={() => editName(account)}
+									></Pencil></span
+								><span style="margin-left: 0.75rem">{account.name}</span>{/if}</span
+						>
+
+						<span title="Archive Account">
+							<Archive class="clickable" size={16} onclick={() => archive(account)} />
+						</span>
+					</div>
+				{/each}
+				<button type="button" class="account-card-btn" onclick={() => makeNewAccount()}
+					>Create New</button
+				>
+			</div>
+			<div>
+				Archived Accounts
+				{#each archivedAccounts as account (account.id)}
+					<div class="account-card">
+						<span class="center-inside"> {account.name}</span>
+
+						<span title="Un-Archive Account">
+							<ArchiveRestore class="clickable" size={16} onclick={() => unArchive(account)} />
+						</span>
+					</div>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>

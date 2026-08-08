@@ -14,6 +14,7 @@ export const accounts = sqliteTable("accounts", {
 		.notNull()
 		.default("checking"),
 	startingBalance: real("starting_balance").notNull().default(0),
+	archived: integer("archived", { mode: "boolean" }).notNull().default(false),
 });
 
 export const entries = sqliteTable("entries", {
