@@ -391,6 +391,22 @@ td select {
 	margin: 0;
 }
 
+td.icon-col {
+	position: relative;
+	overflow: visible;
+}
+
+td.icon-col span.error {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	white-space: nowrap;
+	background-color: var(--dark-2);
+	padding: 0.2rem 0.4rem;
+	border-radius: 4px;
+	z-index: 10;
+}
+
 /* -- Info Cards --*/
 .summary-row {
 	display: flex;

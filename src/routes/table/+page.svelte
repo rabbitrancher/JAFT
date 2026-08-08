@@ -409,7 +409,7 @@
 		<tbody>
 			{#each filteredEntries as entry (entry.id)}
 				<tr data-date={entry.date} class:highlighted={entry.date === highlightDate}>
-					<td class:icon-col={!saveError}>
+					<td class="icon-col">
 						{#if entry.id !== curEditId}
 							<span title="Edit Entry">
 								<Pencil class="clickable" size={16} onclick={() => editLine(entry)} />
