@@ -505,8 +505,16 @@ td.icon-col span.error {
 	padding: 0.25rem 0.75rem;
 }
 
+@media (max-width: 900px) {
+	.reset-zoom {
+		top: 0.25rem;
+	}
+}
+
 .chart-controls {
 	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5rem;
 }
 
@@ -637,8 +645,53 @@ td.icon-col span.error {
 	accent-color: var(--primary);
 }
 
+/* -- Radio Grid -- */
+
+.radio-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-height: 300px;
+	overflow-y: auto;
+	padding-right: 12px;
+}
+
+.radio-label {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+	text-align: left;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-muted);
+	transition: color 0.2s ease;
+	user-select: none;
+	margin: 0;
+}
+
+.radio-label:hover {
+	color: var(--text);
+}
+
+.radio-label input[type="radio"] {
+	cursor: pointer;
+	width: 16px;
+	height: 16px;
+	accent-color: var(--primary);
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.account-filter-menu {
+	left: 0;
+	right: auto;
+	min-width: 16rem;
+	max-width: min(24rem, calc(100vw - 2rem));
+}
+
 /* -- Popular table -- */
-.popular-descriptions {
+.small-card-descriptions {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 	gap: 0.6rem;
@@ -648,28 +701,28 @@ td.icon-col span.error {
 	align-content: start;
 }
 
-.popular-row {
+.small-card-row {
 	background-color: var(--bg-elevated);
 	border-radius: var(--radius-md);
 	padding: 0.5rem 0.75rem;
 }
 
-.popular-row-header {
+.small-card-row-header {
 	display: flex;
 	justify-content: space-between;
 	margin-bottom: 0.25rem;
 }
 
-.popular-description {
+.small-card-description {
 	font-weight: var(--font-weight-button);
 }
 
-.popular-count {
+.small-card-count {
 	color: var(--text-muted);
 	font-size: 0.85rem;
 }
 
-.popular-bar-track {
+.small-card-bar-track {
 	height: 4px;
 	border-radius: var(--radius-sm);
 	background-color: var(--border-subtle);
@@ -677,13 +730,13 @@ td.icon-col span.error {
 	margin-bottom: 0.15rem;
 }
 
-.popular-bar-fill {
+.small-card-bar-fill {
 	height: 100%;
 	background-color: var(--primary);
 	border-radius: var(--radius-sm);
 }
 
-.popular-total {
+.small-card-total {
 	font-size: 0.75rem;
 	color: var(--text-muted);
 }

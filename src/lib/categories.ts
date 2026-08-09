@@ -48,4 +48,4 @@ export const BASE_CATEGORIES = [
 	"Miscellaneous",
 ] as const;
 
-export type Category = (typeof BASE_CATEGORIES)[number];
+export type BaseCategories = (typeof BASE_CATEGORIES)[number];
