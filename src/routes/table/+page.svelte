@@ -23,7 +23,7 @@
 	type FieldType<K> = K extends "amount"
 		? number
 		: K extends "type"
-			? "income" | "expense"
+			? "income" | "expense" | "transfer"
 			: string;
 
 	/**
@@ -249,7 +249,9 @@
 		editValues = {
 			date: entry.date,
 			amount: entry.amount,
-			type: entry.type as "income" | "expense",
+			type: entry.type as "income" | "expense" | "transfer",
+			account: entry.account,
+			to_account: entry.to_account ?? "",
 			category: entry.category ?? "",
 			description: entry.description ?? "",
 			notes: entry.notes ?? "",
@@ -284,6 +286,15 @@
 		resetLines();
 		return true;
 	}
+
+	/**
+	 * Automatically resets the to_account field to an empty string when the type is changed to a non-transfer type.
+	 */
+	$effect(() => {
+		if (editValues && editValues.type !== "transfer") {
+			editValues.to_account = "";
+		}
+	});
 
 	/**
 	 * Enables deletion of the currently edited row.
@@ -409,7 +420,7 @@
 		<tbody>
 			{#each filteredEntries as entry (entry.id)}
 				<tr data-date={entry.date} class:highlighted={entry.date === highlightDate}>
-					<td class:icon-col={!saveError}>
+					<td class="icon-col">
 						{#if entry.id !== curEditId}
 							<span title="Edit Entry">
 								<Pencil class="clickable" size={16} onclick={() => editLine(entry)} />
@@ -436,7 +447,30 @@
 										<select bind:value={editValues.type}>
 											<option value="expense">Expense</option>
 											<option value="income">Income</option>
+											<option value="transfer">Transfer</option>
 										</select>
+									{:else if header.header.key === "account"}
+										<select bind:value={editValues.account}>
+											{#each data.accounts as account (account.id)}
+												<option value={account.name}>
+													{account.name}
+												</option>
+											{/each}
+										</select>
+									{:else if header.header.key === "to_account"}
+										{#if editValues.type === "transfer"}
+											<select bind:value={editValues.to_account}>
+												<!--'""' will be converted to null when edit submission is processed-->
+												<option value="">None</option>
+
+												{#each data.accounts.filter((account) => account.name !== editValues?.account) as account (account.id)}
+													<option value={account.name}>
+														{account.name}
+													</option>
+												{/each}
+											</select>
+										{:else}
+											<!--Note that there is an $effect that sets editValues.toAccount = "" if the editValues.type !== "transfer"-->{/if}
 									{:else if header.header.key === "category"}
 										<div class="autocomplete">
 											<input

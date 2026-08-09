@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
-import { entries, categories } from "$lib/server/db/schema";
+import { entries, categories, accounts } from "$lib/server/db/schema";
 import { eq } from "drizzle-orm";
 import { toTitleCase, toSentenceCase } from "$lib/utils/format";
 import type { RequestHandler } from "./$types";
@@ -24,7 +24,9 @@ export const PATCH: RequestHandler = async ({ request }) => {
 		updates: {
 			date?: string;
 			amount?: number;
-			type?: "income" | "expense";
+			type?: "income" | "expense" | "transfer";
+			account?: string;
+			to_account?: string;
 			category?: string;
 			description?: string;
 			notes?: string;
@@ -49,7 +51,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
 			return json({ error: "Can't have a negative amount" }, { status: 400 });
 		}
 	}
-	if (updates.type === "income" || updates.type === "expense") {
+	if (updates.type === "income" || updates.type === "expense" || updates.type === "transfer") {
 		safeUpdates.type = updates.type;
 	}
 	if (updates.description) {
@@ -57,6 +59,39 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	}
 	if (updates.notes) {
 		safeUpdates.notes = String(updates.notes);
+	}
+	if (updates.account) {
+		const account = await db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.name, updates.account))
+			.get();
+
+		if (!account) {
+			return json({ error: "Invalid account" }, { status: 400 });
+		}
+
+		safeUpdates.account_id = account.id;
+	}
+	if (updates.to_account !== undefined) {
+		if (updates.to_account === "") {
+			safeUpdates.to_account_id = null;
+		} else {
+			const account = await db
+				.select()
+				.from(accounts)
+				.where(eq(accounts.name, updates.to_account))
+				.get();
+
+			if (!account) {
+				return json({ error: "Invalid target account" }, { status: 400 });
+			}
+
+			safeUpdates.to_account_id = account.id;
+		}
+	}
+	if (safeUpdates.to_account_id === null && safeUpdates.type === "transfer") {
+		return json({ error: "Must provide a target account for a transfer entry" }, { status: 400 });
 	}
 	if (updates.category) {
 		// category is stored as a foreign key, so we need to look up the ID
