@@ -202,7 +202,11 @@
 					xAxisKey: "date",
 					yAxisKey: "amount",
 				},
-				interaction: { mode: "index", intersect: false },
+				interaction: {
+					mode: "nearest",
+					intersect: false,
+					axis: "x",
+				},
 				elements: {
 					point: { radius: 0, hoverRadius: 6 },
 				},
@@ -235,6 +239,10 @@
 					},
 					tooltip: {
 						enabled: true,
+						mode: "nearest",
+						intersect: false,
+						axis: "x",
+
 						backgroundColor: tooltipBg,
 						titleColor: tooltipText,
 						bodyColor: tooltipText,
