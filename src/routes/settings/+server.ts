@@ -1,20 +1,46 @@
 import { db } from "$lib/server/db";
 import { accounts } from "$lib/server/db/schema";
 import { json } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 
 export const PATCH: RequestHandler = async ({ request }) => {
 	const body = await request.json();
 
-	// set either the name of an account or it's archived status depending on the contents of the body
-	await db
+	if (body.name === "") {
+		return json({ error: "Please provide a valid account name" }, { status: 400 });
+	}
+
+	// check if another account already has this name
+	if (body.name !== undefined) {
+		const existing = await db
+			.select()
+			.from(accounts)
+			.where(and(eq(accounts.name, body.name), ne(accounts.id, body.id)));
+
+		if (existing.length > 0) {
+			return new Response(JSON.stringify({ success: false, error: "Name already taken" }), {
+				status: 409,
+			});
+		}
+	}
+
+	// update using the provided values
+	const result = await db
 		.update(accounts)
 		.set({
 			...(body.name !== undefined && { name: body.name }),
+			...(body.type !== undefined && { type: body.type }),
 			...(body.archived !== undefined && { archived: body.archived }),
 		})
-		.where(eq(accounts.id, body.id));
+		.where(eq(accounts.id, body.id))
+		.returning({ updatedID: accounts.id });
+
+	if (result.length === 0) {
+		return new Response(JSON.stringify({ success: false, error: "Account not found" }), {
+			status: 404,
+		});
+	}
 
 	return json({ success: true });
 };

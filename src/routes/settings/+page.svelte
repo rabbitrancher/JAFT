@@ -4,6 +4,7 @@
 	import { Archive, ArchiveRestore, LockOpen, Pencil, Save } from "@lucide/svelte/icons";
 	import { Lock } from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
+	import { accountTypes, type AccountType } from "$lib/accounts.js";
 
 	let { data } = $props();
 
@@ -86,9 +87,15 @@
 
 	let activeAccounts = $derived(data.allAccounts.filter((account) => !account.archived));
 
-	let editAccountName = $state(<string | null>null);
-
-	let editAccountId = $state(<number | null>null);
+	let editingAccount = $state<{
+		id: number | null;
+		name: string | null;
+		type: AccountType | null;
+	}>({
+		id: null,
+		name: null,
+		type: null,
+	});
 
 	let accountError = $state<string | null>(null);
 
@@ -108,27 +115,27 @@
 		invalidateAll();
 	}
 
-	function editName(account: (typeof data.allAccounts)[number]) {
-		editAccountName = account.name;
-		editAccountId = account.id;
+	function editAccount(account: (typeof data.allAccounts)[number]) {
+		editingAccount = { name: account.name, id: account.id, type: account.type };
 	}
 
-	async function saveName(account: (typeof data.allAccounts)[number]) {
+	async function saveAccount(account: (typeof data.allAccounts)[number]) {
 		const result = await fetch("/settings", {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				id: account.id,
-				name: editAccountName,
+				name: editingAccount.name,
+				type: editingAccount.type,
 			}),
 		});
 		const json = await result.json();
 		if (!result.ok) {
 			accountError = json.error;
+		} else {
+			editingAccount = { id: null, name: null, type: null };
+			invalidateAll();
 		}
-		editAccountName = null;
-		editAccountId = null;
-		invalidateAll();
 	}
 
 	async function makeNewAccount() {
@@ -225,15 +232,28 @@
 				{#each activeAccounts as account (account.id)}
 					<div class="account-card">
 						<span class="center-inside">
-							{#if editAccountId == account.id}
+							{#if editingAccount.id == account.id}
 								<span title="Save Changes">
-									<Save class="clickable" size={16} onclick={() => saveName(account)}></Save></span
+									<Save class="clickable" size={16} onclick={() => saveAccount(account)}
+									></Save></span
 								>
-								<input type="text" bind:value={editAccountName} />
+								<div class="account-info">
+									<input type="text" bind:value={editingAccount.name} />
+									<select class="account-type-select" bind:value={editingAccount.type}>
+										{#each accountTypes as type (type)}
+											<option value={type}>{type}</option>
+										{/each}
+									</select>
+								</div>
 							{:else}<span title="Edit Account Name"
-									><Pencil class="clickable" size={16} onclick={() => editName(account)}
+									><Pencil class="clickable" size={16} onclick={() => editAccount(account)}
 									></Pencil></span
-								><span style="margin-left: 0.75rem">{account.name}</span>{/if}</span
+								>
+								<div class="account-info">
+									<span>{account.name}</span>
+									<span class="account-type">{account.type}</span>
+								</div>
+							{/if}</span
 						>
 
 						<span title="Archive Account">

@@ -1,3 +1,4 @@
+import { accountTypes } from "$lib/accounts";
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const categories = sqliteTable("categories", {
@@ -9,7 +10,7 @@ export const accounts = sqliteTable("accounts", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull().unique(),
 	type: text("type", {
-		enum: ["checking", "savings", "cash", "investment", "other"],
+		enum: accountTypes,
 	})
 		.notNull()
 		.default("checking"),
