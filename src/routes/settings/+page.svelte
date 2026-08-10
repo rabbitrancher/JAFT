@@ -300,7 +300,7 @@
 				{#each archivedAccounts as account (account.id)}
 					<div class="account-card">
 						<span class="center-inside">
-							{#if pendingDeleteId}
+							{#if pendingDeleteId == account.id}
 								<span title="Confirm Delete">
 									<CircleCheckBig
 										class="clickable error"
