@@ -1,5 +1,8 @@
-import { ALL_HEADERS } from "$lib/tableHeaders";
+import { db } from "$lib/server/db";
+import { accounts } from "$lib/server/db/schema";
 
 export async function load() {
-	return { allHeaders: ALL_HEADERS };
+	const allAccounts = await db.select().from(accounts);
+
+	return { allAccounts };
 }

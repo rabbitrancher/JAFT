@@ -23,7 +23,7 @@
 	type FieldType<K> = K extends "amount"
 		? number
 		: K extends "type"
-			? "income" | "expense"
+			? "income" | "expense" | "transfer"
 			: string;
 
 	/**
@@ -58,6 +58,10 @@
 	let searchInput: HTMLInputElement;
 
 	let searchQuery = $state("");
+
+	let accountFilter = $state<string>("");
+
+	let accountOptions = $derived([...data.accounts].sort((a, b) => a.name.localeCompare(b.name)));
 
 	let curDir = $state<SortDirection>("DESC");
 	let curSortKey = $state<keyof EditValues>("date");
@@ -153,20 +157,34 @@
 		new Fuse(sortedEntries, {
 			threshold: 0.4,
 			keys: possibleHeaders
-				.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key))
+				.filter(
+					(h) =>
+						h.selected && ["notes", "category", "description", "account"].includes(h.header.key),
+				)
 				.map((h) => h.header.key),
 		}),
 	);
 
 	/**
-	 * A derived store that filters the sorted entries based on the current search query.
-	 * If the search query is empty, returns the sorted entries.
-	 * Otherwise, searches for the query in the currently selected headers and returns the matching entries.
+	 * A derived store that generates a filtered list of entries based on the current filter and search query.
+	 *
+	 * This store takes into account the currently selected account filter and search query.
+	 *
+	 * @returns {Array} A filtered list of entries.
 	 */
 	let filteredEntries = $derived.by(() => {
-		if (!searchQuery.trim()) return sortedEntries;
-		const results = searchFuse.search(searchQuery).map((r) => r.item);
-		return sortedEntries.filter((e) => results.some((r) => r.id === e.id));
+		let result = sortedEntries;
+
+		if (accountFilter) {
+			result = result.filter((e) => e.account === accountFilter || e.to_account === accountFilter);
+		}
+
+		if (searchQuery.trim()) {
+			const results = searchFuse.search(searchQuery).map((r) => r.item);
+			result = result.filter((e) => results.some((r) => r.id === e.id));
+		}
+
+		return result;
 	});
 
 	/**
@@ -249,7 +267,9 @@
 		editValues = {
 			date: entry.date,
 			amount: entry.amount,
-			type: entry.type as "income" | "expense",
+			type: entry.type as "income" | "expense" | "transfer",
+			account: entry.account,
+			to_account: entry.to_account ?? "",
 			category: entry.category ?? "",
 			description: entry.description ?? "",
 			notes: entry.notes ?? "",
@@ -284,6 +304,15 @@
 		resetLines();
 		return true;
 	}
+
+	/**
+	 * Automatically resets the to_account field to an empty string when the type is changed to a non-transfer type.
+	 */
+	$effect(() => {
+		if (editValues && editValues.type !== "transfer") {
+			editValues.to_account = "";
+		}
+	});
 
 	/**
 	 * Enables deletion of the currently edited row.
@@ -346,8 +375,16 @@
 
 <div class="table-header-row">
 	<h1>Your Entries</h1>
-	{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
-		<div class="search-row" style="align-self: flex-end;">
+	<div class="search-row" style="align-self: flex-end;">
+		{#if data.accounts.length > 0 && data.entries.length !== 0}
+			<select bind:value={accountFilter} class="account-filter" aria-label="Filter by account">
+				<option value="">All Accounts</option>
+				{#each accountOptions as account (account.id)}
+					<option value={account.name}>{account.name}</option>
+				{/each}
+			</select>
+		{/if}
+		{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
 			<div class="search-box">
 				<Search
 					size={14}
@@ -364,8 +401,8 @@
 					onfocus={() => searchInput.select()}
 				/>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 {#if data.entries.length === 0}
@@ -409,7 +446,7 @@
 		<tbody>
 			{#each filteredEntries as entry (entry.id)}
 				<tr data-date={entry.date} class:highlighted={entry.date === highlightDate}>
-					<td class:icon-col={!saveError}>
+					<td class="icon-col">
 						{#if entry.id !== curEditId}
 							<span title="Edit Entry">
 								<Pencil class="clickable" size={16} onclick={() => editLine(entry)} />
@@ -436,7 +473,30 @@
 										<select bind:value={editValues.type}>
 											<option value="expense">Expense</option>
 											<option value="income">Income</option>
+											<option value="transfer">Transfer</option>
 										</select>
+									{:else if header.header.key === "account"}
+										<select bind:value={editValues.account}>
+											{#each data.accounts as account (account.id)}
+												<option value={account.name}>
+													{account.name}
+												</option>
+											{/each}
+										</select>
+									{:else if header.header.key === "to_account"}
+										{#if editValues.type === "transfer"}
+											<select bind:value={editValues.to_account}>
+												<!--'""' will be converted to null when edit submission is processed-->
+												<option value="">None</option>
+
+												{#each data.accounts.filter((account) => account.name !== editValues?.account) as account (account.id)}
+													<option value={account.name}>
+														{account.name}
+													</option>
+												{/each}
+											</select>
+										{:else}
+											<!--Note that there is an $effect that sets editValues.toAccount = "" if the editValues.type !== "transfer"-->{/if}
 									{:else if header.header.key === "category"}
 										<div class="autocomplete">
 											<input

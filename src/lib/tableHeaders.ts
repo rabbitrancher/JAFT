@@ -4,7 +4,16 @@ import { toTitleCase } from "./utils/format";
  * An array of all possible column keys in the table.
  * This array should be kept in sync with the schema.
  */
-export const COLUMN_KEYS = ["date", "amount", "type", "category", "description", "notes"] as const;
+export const COLUMN_KEYS = [
+	"date",
+	"amount",
+	"type",
+	"account",
+	"to_account",
+	"category",
+	"description",
+	"notes",
+] as const;
 
 /**
  * A type representing a single column key in the table.

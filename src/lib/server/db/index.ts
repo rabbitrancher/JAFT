@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import * as schema from "./schema.js";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -12,7 +13,12 @@ function getDb() {
 	const sqlite = new Database(dbPath);
 	console.log("Database connected");
 
-	_db = drizzle(sqlite, { schema });
+	_db = drizzle({ client: sqlite, schema });
+
+	console.log("Running migrations...");
+	migrate(_db, { migrationsFolder: "drizzle" });
+	console.log("Migrations complete");
+
 	return _db;
 }
 
