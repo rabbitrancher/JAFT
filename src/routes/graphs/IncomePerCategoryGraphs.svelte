@@ -14,7 +14,8 @@
 	import { formatCurrency } from "$lib/utils/format";
 	import { SvelteMap } from "svelte/reactivity";
 	import { generatePalette } from "$lib/utils/colors";
-	import type { CategoryChartProps, CategoryPoint } from "./graphContainers";
+	import type { CategoryPoint } from "$lib/types/graphs/types";
+	import type { CategoryChartProps } from "$lib/types/graphs/props";
 	Chart.register(
 		ArcElement,
 		BarController,
@@ -67,7 +68,7 @@
 	let allCategories = $derived.by<string[]>(() => {
 		const unique = new Set<string>(
 			points
-				.filter((p: CategoryPoint) => p.transactionType === "income")
+				.filter((p: CategoryPoint) => p.cashFlowType === "income")
 				.map((p: CategoryPoint) => p.category),
 		);
 		return Array.from(unique).sort();
@@ -95,8 +96,7 @@
 		const totals = new SvelteMap<string, number>();
 
 		for (const point of visiblePoints.filter(
-			(p: CategoryPoint) =>
-				p.transactionType === "income" && !excludedCategories.includes(p.category),
+			(p: CategoryPoint) => p.cashFlowType === "income" && !excludedCategories.includes(p.category),
 		)) {
 			totals.set(point.category, (totals.get(point.category) ?? 0) + point.y);
 		}

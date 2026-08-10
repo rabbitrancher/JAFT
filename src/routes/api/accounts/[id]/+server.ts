@@ -1,8 +1,6 @@
-
-
-import { isAccountType, type AccountType } from "$lib/accounts";
 import { db } from "$lib/server/db";
 import { accounts, entries } from "$lib/server/db/schema";
+import { isAccountType, type AccountType } from "$lib/types/accounts";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { or, eq, and, ne } from "drizzle-orm";
 

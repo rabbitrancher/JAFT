@@ -1,24 +1,22 @@
 import { db } from "$lib/server/db";
 import { accounts, categories, entries } from "$lib/server/db/schema";
-import { and, asc, eq, isNotNull, ne, sql } from "drizzle-orm";
+import { accountTypes, type AccountId, type AccountType } from "$lib/types/accounts";
+import type { NetWorthChart, PopularDescription } from "$lib/types/graphs/graphs";
 import type {
 	MoneyMovement,
-	DataPoint,
-	NetWorthChart,
-	CategoryPoint,
-	TransactionType,
-	TrendSummary,
-	TrendPoint,
-	PopularDescription,
-	AccountBalance,
-	AccountId,
+	DailyBalanceChanges,
 	DateString,
 	BalanceChange,
-	DailyBalanceChanges,
 	Balance,
-	Summary,
-} from "./graphContainers";
-import { accountTypes, type AccountType } from "$lib/accounts";
+	DataPoint,
+	FinancialSummary,
+	CategoryPoint,
+	CashFlowType,
+	TrendSummary,
+	TrendPoint,
+	AccountBalance,
+} from "$lib/types/graphs/types";
+import { and, asc, eq, isNotNull, ne, sql } from "drizzle-orm";
 
 /**
  * Loads the necessary data for the application.
@@ -373,7 +371,7 @@ async function getSummaryAndNetWorth() {
 				AccountType,
 				MoneyMovement
 			>,
-		} satisfies Summary,
+		} satisfies FinancialSummary,
 		netWorthChart: {
 			points: netWorthPoints,
 			byAccount,
@@ -413,7 +411,7 @@ async function getCategoryChart() {
 				e,
 			): e is typeof e & {
 				category: string;
-				type: TransactionType;
+				type: CashFlowType;
 				accountType: AccountType;
 			} => e.category !== null && e.accountType !== null && !!e.date,
 		)
@@ -421,11 +419,10 @@ async function getCategoryChart() {
 			x: new Date(e.date + "T00:00:00").toISOString().split("T")[0],
 			y: Math.abs(e.amount),
 			category: e.category,
-			transactionType: e.type,
+			cashFlowType: e.type,
 			accountId: e.accountId,
 			accountType: e.accountType,
 		}));
-
 	return {
 		points: categoryPoints,
 	};

@@ -1,4 +1,4 @@
-import { accountTypes } from "$lib/accounts";
+import { accountTypes } from "$lib/types/accounts";
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const categories = sqliteTable("categories", {

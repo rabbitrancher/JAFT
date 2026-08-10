@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DEFAULT_SELECTED_HEADERS, type ValidColumnKey } from "$lib/tableHeaders.js";
+	import { DEFAULT_SELECTED_HEADERS, type ValidColumnKey } from "$lib/types/tableHeaders.js";
 	import { toTitleCase } from "$lib/utils/format.js";
 	import { onMount, tick } from "svelte";
 	import {
@@ -13,17 +13,14 @@
 	} from "@lucide/svelte/icons";
 	import { page } from "$app/state";
 	import Fuse from "fuse.js";
+	import type { Entry, TransactionType } from "$lib/types/entries.js";
 
 	/**
 	 * Represents the type of a field in the EditValues object, based on the column key.
 	 *
 	 * @template K The column key.
 	 */
-	type FieldType<K> = K extends "amount"
-		? number
-		: K extends "type"
-			? "income" | "expense" | "transfer"
-			: string;
+	type FieldType<K> = K extends "amount" ? number : K extends "type" ? TransactionType : string;
 
 	/**
 	 * Represents the object containing the values of the row currently being edited.
@@ -275,7 +272,7 @@
 	 * Switches a row into edit mode, pre-filling inputs with current values.
 	 * Saves any previously edited row first.
 	 */
-	async function editLine(entry: (typeof data.entries)[number]) {
+	async function editLine(entry: Entry) {
 		const success = await doneEdit();
 		// if the previous edit was not a success, do not switch to a new line for editing
 		if (!success) {
@@ -285,7 +282,7 @@
 		editValues = {
 			date: entry.date,
 			amount: entry.amount,
-			type: entry.type as "income" | "expense" | "transfer",
+			type: entry.type as TransactionType,
 			account: entry.account,
 			to_account: entry.to_account ?? "",
 			category: entry.category ?? "",

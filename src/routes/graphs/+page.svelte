@@ -9,16 +9,19 @@
 	import type {
 		DataPoint,
 		TimeRange,
-		CategoryPoint,
 		AccountBalance,
 		MoneyMovement,
-		AccountId,
 		AccountSeries,
-		CategoryChartProps,
+		CategoryPoint,
 		AccountTypeSeries,
-		NetWorthChartProps,
-	} from "./graphContainers.js";
-	import { isAccountType, type AccountType, accountTypes } from "$lib/accounts.js";
+	} from "$lib/types/graphs/types.js";
+	import {
+		isAccountType,
+		type AccountType,
+		accountTypes,
+		type AccountId,
+	} from "$lib/types/accounts.js";
+	import type { CategoryChartProps, NetWorthChartProps } from "$lib/types/graphs/props.js";
 
 	let { data } = $props();
 

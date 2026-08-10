@@ -18,8 +18,8 @@
 		AccountSeries,
 		DataPoint,
 		AccountTypeSeries as AccountTypeSeries,
-		NetWorthChartProps,
-	} from "./graphContainers";
+	} from "$lib/types/graphs/types";
+	import type { NetWorthChartProps } from "$lib/types/graphs/props";
 
 	Chart.register(
 		LineController,

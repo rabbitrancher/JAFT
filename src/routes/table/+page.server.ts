@@ -1,19 +1,8 @@
 import type { accounts, categories } from "$lib/server/db/schema";
+import type { Entry } from "$lib/types/entries";
 
 type Account = typeof accounts.$inferSelect;
 type Category = typeof categories.$inferSelect;
-
-type Entry = {
-	id: number;
-	date: string;
-	amount: number;
-	type: "income" | "expense" | "transfer";
-	account: string | null;
-	to_account: string | null;
-	category: string | null;
-	description: string | null;
-	notes: string | null;
-};
 
 /**
  * Loads the necessary data for the application, including entries, accounts, categories, and past descriptions.

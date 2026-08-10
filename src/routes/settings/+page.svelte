@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DEFAULT_SELECTED_HEADERS, type HeaderOption } from "$lib/tableHeaders";
+	import { DEFAULT_SELECTED_HEADERS, type HeaderOption } from "$lib/types/tableHeaders.js";
 	import { onMount } from "svelte";
 	import {
 		Archive,
@@ -11,7 +11,7 @@
 		Trash2,
 	} from "@lucide/svelte/icons";
 	import { Lock } from "@lucide/svelte/icons";
-	import { accountTypes, type AccountType } from "$lib/accounts.js";
+	import { accountTypes, type AccountType } from "$lib/types/accounts.js";
 
 	let { data } = $props();
 	let allAccounts = $derived(data.allAccounts);

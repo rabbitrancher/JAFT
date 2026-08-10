@@ -1,6 +1,6 @@
 <script lang="ts">
+	import type { PopularDescription } from "$lib/types/graphs/graphs";
 	import { formatCurrency } from "$lib/utils/format";
-	import type { PopularDescription } from "./graphContainers";
 
 	let { descriptions } = $props<{ descriptions: PopularDescription[] }>();
 

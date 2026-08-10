@@ -4,6 +4,7 @@ import { entries, categories, accounts } from "$lib/server/db/schema";
 import { eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { toTitleCase, toSentenceCase } from "$lib/utils/format";
+import type { TransactionType } from "$lib/types/entries";
 
 const account = alias(accounts, "account");
 const toAccount = alias(accounts, "to_account");
@@ -28,7 +29,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 	 *   updates: {
 	 *     date?: string;
 	 *     amount?: number;
-	 *     type?: "income" | "expense" | "transfer";
+	 *     type?: TransactionType;
 	 *     account?: string;
 	 *     to_account?: string;
 	 *     category?: string;
@@ -42,7 +43,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		updates: {
 			date?: string;
 			amount?: number;
-			type?: "income" | "expense" | "transfer";
+			type?: TransactionType;
 			account?: string;
 			to_account?: string;
 			category?: string;
