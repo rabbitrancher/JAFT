@@ -11,7 +11,6 @@
 		SquareCheckBig,
 		Trash2,
 	} from "@lucide/svelte/icons";
-	import { invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
 	import Fuse from "fuse.js";
 
@@ -37,6 +36,17 @@
 	type SortDirection = "ASC" | "DESC";
 
 	let { data } = $props();
+	let entries = $derived(data.entries);
+
+	$effect(() => {
+		entries = data.entries;
+	});
+
+	let categories = $derived(data.categories);
+
+	$effect(() => {
+		categories = data.categories;
+	});
 
 	/**
 	 * Stores the configuration of the table headers, including which headers are currently selected for display.
@@ -89,7 +99,7 @@
 	 */
 	let categorySuggestions = $derived(
 		editValues
-			? data.categories
+			? categories
 					.filter((c: string) =>
 						c.toLowerCase().includes((editValues?.category || "").toLowerCase()),
 					)
@@ -130,7 +140,7 @@
 	 */
 	let sortedEntries = $derived.by(() => {
 		// Create a copy so we don't mutate the raw server props
-		const entriesCopy = [...data.entries];
+		const entriesCopy = [...entries];
 
 		return entriesCopy.sort((a, b) => {
 			const valA = a[curSortKey as keyof typeof a];
@@ -187,11 +197,19 @@
 		return result;
 	});
 
+	let descriptions = $derived([
+		...new Set(
+			entries
+				.map((entry) => entry.description)
+				.filter((description): description is string => description !== null),
+		),
+	]);
+
 	/**
 	 * Creates a Fuse.js instance for searching through the list of previously entered descriptions.
 	 * This Fuse instance is used to generate the description suggestions.
 	 */
-	const descFuse = $derived(new Fuse(data.descriptions, { threshold: 0.4 }));
+	const descFuse = $derived(new Fuse(descriptions, { threshold: 0.4 }));
 
 	/**
 	 * A derived store that generates a list of description suggestions based on the currently edited description.
@@ -299,7 +317,10 @@
 			saveError = json.error;
 			return false;
 		}
-		await invalidateAll();
+		entries = entries.map((entry) => (entry.id === json.id ? json : entry));
+		if (json.category && !categories.includes(json.category)) {
+			categories = [...categories, json.category];
+		}
 		resetLines();
 		return true;
 	}
@@ -344,7 +365,7 @@
 			deleteError = json.error;
 			return false;
 		}
-		await invalidateAll();
+		entries = entries.filter((entry) => entry.id !== pendingDeleteId);
 		resetLines();
 		return true;
 	}
@@ -364,7 +385,7 @@
 
 <!--stores all unique categories from the sql db-->
 <datalist id="categories">
-	{#each data.categories as category (category)}
+	{#each categories as category (category)}
 		<option value={category}></option>
 	{/each}
 </datalist>
@@ -372,7 +393,7 @@
 <div class="table-header-row">
 	<h1>Your Entries</h1>
 	<div class="search-row" style="align-self: flex-end;">
-		{#if data.accounts.length > 0 && data.entries.length !== 0}
+		{#if data.accounts.length > 0 && entries.length !== 0}
 			<select bind:value={accountFilter} class="account-filter" aria-label="Filter by account">
 				<option value="">All Accounts</option>
 				{#each accountOptions as account (account.id)}
@@ -380,7 +401,7 @@
 				{/each}
 			</select>
 		{/if}
-		{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
+		{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && entries.length !== 0}
 			<div class="search-box">
 				<Search
 					size={14}
@@ -401,7 +422,7 @@
 	</div>
 </div>
 
-{#if data.entries.length === 0}
+{#if entries.length === 0}
 	<p>No entries yet.</p>
 {:else}
 	<table>

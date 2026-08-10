@@ -11,10 +11,14 @@
 		Trash2,
 	} from "@lucide/svelte/icons";
 	import { Lock } from "@lucide/svelte/icons";
-	import { invalidateAll } from "$app/navigation";
 	import { accountTypes, type AccountType } from "$lib/accounts.js";
 
 	let { data } = $props();
+	let allAccounts = $derived(data.allAccounts);
+
+	$effect(() => {
+		allAccounts = data.allAccounts;
+	});
 
 	let headers = $state<HeaderOption[]>(DEFAULT_SELECTED_HEADERS);
 
@@ -93,7 +97,7 @@
 		dragIndex = null;
 	}
 
-	let activeAccounts = $derived(data.allAccounts.filter((account) => !account.archived));
+	let activeAccounts = $derived(allAccounts.filter((account) => !account.archived));
 
 	let editingAccount = $state<{
 		id: number | null;
@@ -107,7 +111,7 @@
 
 	let accountError = $state<string | null>(null);
 
-	async function archive(account: (typeof data.allAccounts)[number]) {
+	async function archive(account: (typeof allAccounts)[number]) {
 		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
@@ -118,15 +122,16 @@
 		const json = await result.json();
 		if (!result.ok) {
 			accountError = json.error;
+		} else {
+			allAccounts = allAccounts.map((a) => (a.id === json.id ? json : a));
 		}
-		invalidateAll();
 	}
 
-	function editAccount(account: (typeof data.allAccounts)[number]) {
+	function editAccount(account: (typeof allAccounts)[number]) {
 		editingAccount = { name: account.name, id: account.id, type: account.type };
 	}
 
-	async function saveAccount(account: (typeof data.allAccounts)[number]) {
+	async function saveAccount(account: (typeof allAccounts)[number]) {
 		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
@@ -139,8 +144,8 @@
 		if (!result.ok) {
 			accountError = json.error;
 		} else {
+			allAccounts = allAccounts.map((a) => (a.id === json.id ? json : a));
 			editingAccount = { id: null, name: null, type: null };
-			invalidateAll();
 		}
 	}
 
@@ -155,13 +160,14 @@
 		const json = await result.json();
 		if (!result.ok) {
 			accountError = json.error;
+		} else {
+			allAccounts = [...allAccounts, json];
 		}
-		invalidateAll();
 	}
 
-	let archivedAccounts = $derived(data.allAccounts.filter((account) => account.archived));
+	let archivedAccounts = $derived(allAccounts.filter((account) => account.archived));
 
-	async function unArchive(account: (typeof data.allAccounts)[number]) {
+	async function unArchive(account: (typeof allAccounts)[number]) {
 		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
@@ -172,13 +178,14 @@
 		const json = await result.json();
 		if (!result.ok) {
 			accountError = json.error;
+		} else {
+			allAccounts = allAccounts.map((a) => (a.id === json.id ? json : a));
 		}
-		invalidateAll();
 	}
 
 	let pendingDeleteId = $state<number | null>(null);
 
-	function enableDelete(account: (typeof data.allAccounts)[number]) {
+	function enableDelete(account: (typeof allAccounts)[number]) {
 		pendingDeleteId = account.id;
 		// after 3 seconds, disable delete unless attempted again
 		setTimeout(() => {
@@ -196,7 +203,7 @@
 			accountError = json.error;
 			return false;
 		}
-		await invalidateAll();
+		allAccounts = allAccounts.filter((account) => account.id !== pendingDeleteId);
 		accountError = null;
 		return true;
 	}
