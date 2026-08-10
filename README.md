@@ -12,7 +12,8 @@ JAFT is a simple webapp that allows you to record expenses (and income!) quickly
 The current stored fields are:
 
 - **Amount**: $ (cuz I'm American)
-- **Type**: expense or income
+- **Type**: expense or income (or transfer, see below)
+- **Account** what account this entry is interacting with. Customize your accounts in the settings page!
 - **Category**: A predefined category for the entry, with possibilities determined by the values in
   [`src/lib/categories.ts`](src/lib/categories.ts), selectable via a dropdown. If you enable dynamic
   categories in settings, you can also add new ones on the fly.
@@ -22,8 +23,11 @@ The current stored fields are:
   description" in settings if you want to enforce it.
 - **Notes**: Freeform for any extra information you want. Maybe you went to Kroger and bought $300
   of cheese and want your tracker to be aware.
-- **Date**: When the transaction occurs! And it defaults to the current date because clicking is
-  something to be avoided.
+- **Date**: When the transaction occurs!
+
+If you do a 'transfer' type, the additional field of **Into Account** will show up. This is used to
+indicate which account the money is being transferred _into_, as opposed to the **From Account**
+which is the account the money is _leaving_.
 
 ## What Can It Do?
 
@@ -31,9 +35,10 @@ The current stored fields are:
 
 Beyond just storing entries, the data table has a few tricks:
 
+- **Filter** by an account, or view every entry ever.
 - **Sort** by any visible column - click the header, click again to flip direction. Standard header
   sorting stuff.
-- **Search** across visible text columns (category, description, and notes) with fuzzy matching, so
+- **Search** across visible text columns (category, accounts, description, and notes) with fuzzy matching, so
   typos aren't the end of the world.
 - **Edit** any entry inline - click the pencil, change what you want, click the checkmark to save.
 - **Delete** entries with a two-click confirmation so you don't accidentally remove the charge for
@@ -44,6 +49,7 @@ Beyond just storing entries, the data table has a few tricks:
 
 Numbers in a table are fine, but sometimes you want the bigger picture. The Graphs page has:
 
+- **Account Values**: The current balance of each of your accounts.
 - **Net Worth Over Time**: a zoomable, pannable line chart of your running net worth. Click any
   point to jump to that date in the table.
 - **Expenses & Income by Category**: a donut and bar chart breakdown of where your money's actually
@@ -53,6 +59,15 @@ Numbers in a table are fine, but sometimes you want the bigger picture. The Grap
   blow your budget on day 12 instead of day 30 is pretty useful.
 - **Popular Descriptions**: your most frequent and highest-spend entries, ranked, so you can spot
   the recurring stuff (looking at you, Spotify) without digging through the table.
+
+### Accounts
+
+You can create unique accounts! This allows you to keep your different money pots separate, from
+Venmo to savings. You can also archive accounts, if you don't want it popping up everywhere. These
+accounts, as well as their different types, give you a lot more control over what to view on the
+graphs page. Your very first time launching, you're be given a 'Main Account' to rename as you
+please in the settings page. Please note that accounts can only be deleted if they have no entries
+associated with them.
 
 ## How Do I Use It?
 
@@ -152,14 +167,8 @@ bun install
 
 #### Database Setup
 
-```bash
-bun run db:push
-```
-
-This generates migrations, applies them, and seeds the categories table. If you want to change up
-the categories, edit the hardcoded category list in
-[`src/lib/categories.ts`](src/lib/categories.ts). You can run this at any time, but it will **wipe the
-database**, so be aware.
+If you want to change up the categories in the database, edit the hardcoded category list in
+[`src/lib/categories.ts`](src/lib/categories.ts).
 
 #### Development
 
