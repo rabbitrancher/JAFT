@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { DEFAULT_SELECTED_HEADERS, type HeaderOption } from "$lib/tableHeaders";
 	import { onMount } from "svelte";
-	import { Archive, ArchiveRestore, LockOpen, Pencil, Save } from "@lucide/svelte/icons";
+	import {
+		Archive,
+		ArchiveRestore,
+		CircleCheckBig,
+		LockOpen,
+		Pencil,
+		Save,
+		Trash2,
+	} from "@lucide/svelte/icons";
 	import { Lock } from "@lucide/svelte/icons";
 	import { invalidateAll } from "$app/navigation";
 	import { accountTypes, type AccountType } from "$lib/accounts.js";
@@ -171,6 +179,34 @@
 		invalidateAll();
 	}
 
+	let pendingDeleteId = $state<number | null>(null);
+
+	function enableDelete(account: (typeof data.allAccounts)[number]) {
+		pendingDeleteId = account.id;
+		// after 3 seconds, disable delete unless attempted again
+		setTimeout(() => {
+			pendingDeleteId = null;
+		}, 3000);
+	}
+
+	async function confirmDelete(): Promise<boolean> {
+		const result = await fetch("/settings", {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				id: pendingDeleteId,
+			}),
+		});
+		const json = await result.json();
+		if (!result.ok) {
+			accountError = json.error;
+			return false;
+		}
+		await invalidateAll();
+		accountError = null;
+		return true;
+	}
+
 	/**
 	 * Toggles the categories enforced setting, determining if categories must come from the predefined set of possibilities.
 	 * Updates the local storage with the new setting value.
@@ -269,8 +305,24 @@
 				Archived Accounts
 				{#each archivedAccounts as account (account.id)}
 					<div class="account-card">
-						<span class="center-inside"> {account.name}</span>
-
+						<span class="center-inside">
+							{#if pendingDeleteId}
+								<span title="Confirm Delete">
+									<CircleCheckBig
+										class="clickable error"
+										size={16}
+										onclick={() => confirmDelete()}
+									/>
+								</span>
+							{:else}
+								<span title="Delete Entry">
+									<Trash2 class="clickable" size={16} onclick={() => enableDelete(account)} />
+								</span>
+							{/if}
+							<div class="account-info">
+								{account.name}
+							</div></span
+						>
 						<span title="Un-Archive Account">
 							<ArchiveRestore class="clickable" size={16} onclick={() => unArchive(account)} />
 						</span>

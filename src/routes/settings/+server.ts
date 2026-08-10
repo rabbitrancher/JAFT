@@ -1,7 +1,7 @@
 import { db } from "$lib/server/db";
-import { accounts } from "$lib/server/db/schema";
+import { accounts, entries } from "$lib/server/db/schema";
 import { json } from "@sveltejs/kit";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 
 export const PATCH: RequestHandler = async ({ request }) => {
@@ -63,5 +63,32 @@ export const POST: RequestHandler = async ({ request }) => {
 			status: 409,
 		});
 	}
+	return json({ success: true });
+};
+
+export const DELETE: RequestHandler = async ({ request }) => {
+	const body = (await request.json()) as { id: number };
+	const { id } = body;
+	if (!id || typeof id !== "number") {
+		return json({ error: "Invalid id" }, { status: 400 });
+	}
+
+	const hasInvolvedEntries =
+		(
+			await db
+				.select({ id: entries.id })
+				.from(entries)
+				.where(or(eq(entries.account_id, id), eq(entries.to_account_id, id)))
+				.limit(1)
+		).length !== 0;
+
+	if (hasInvolvedEntries) {
+		return json(
+			{ error: "Cannot delete an account that is tied to existing entries" },
+			{ status: 400 },
+		);
+	}
+
+	await db.delete(accounts).where(eq(accounts.id, id));
 	return json({ success: true });
 };
