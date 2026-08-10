@@ -124,17 +124,16 @@
 
 		// By Account Type
 		if (viewMode === "byAccountType" && accountTypeSeries && accountTypeSeries.length > 0) {
-			const palette = generatePalette(lineColor, accountTypeSeries.length);
+			const relevantAccounts = accountTypeSeries.filter((a) => a.points.length > 0);
+			const palette = generatePalette(lineColor, relevantAccounts.length);
 
-			return accountTypeSeries
-				.filter((a) => a.points.length > 0)
-				.map((series: AccountTypeSeries, i: number) => ({
-					label: series.name,
-					data: filterByTimeRange(series.points),
-					borderColor: palette[i],
-					tension: 0.1,
-					fill: false,
-				}));
+			return relevantAccounts.map((series: AccountTypeSeries, i: number) => ({
+				label: series.name,
+				data: filterByTimeRange(series.points),
+				borderColor: palette[i],
+				tension: 0.1,
+				fill: false,
+			}));
 		}
 
 		// Combined
