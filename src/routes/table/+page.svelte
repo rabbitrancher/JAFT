@@ -59,6 +59,10 @@
 
 	let searchQuery = $state("");
 
+	let accountFilter = $state<string>("");
+
+	let accountOptions = $derived([...data.accounts].sort((a, b) => a.name.localeCompare(b.name)));
+
 	let curDir = $state<SortDirection>("DESC");
 	let curSortKey = $state<keyof EditValues>("date");
 
@@ -153,20 +157,34 @@
 		new Fuse(sortedEntries, {
 			threshold: 0.4,
 			keys: possibleHeaders
-				.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key))
+				.filter(
+					(h) =>
+						h.selected && ["notes", "category", "description", "account"].includes(h.header.key),
+				)
 				.map((h) => h.header.key),
 		}),
 	);
 
 	/**
-	 * A derived store that filters the sorted entries based on the current search query.
-	 * If the search query is empty, returns the sorted entries.
-	 * Otherwise, searches for the query in the currently selected headers and returns the matching entries.
+	 * A derived store that generates a filtered list of entries based on the current filter and search query.
+	 *
+	 * This store takes into account the currently selected account filter and search query.
+	 *
+	 * @returns {Array} A filtered list of entries.
 	 */
 	let filteredEntries = $derived.by(() => {
-		if (!searchQuery.trim()) return sortedEntries;
-		const results = searchFuse.search(searchQuery).map((r) => r.item);
-		return sortedEntries.filter((e) => results.some((r) => r.id === e.id));
+		let result = sortedEntries;
+
+		if (accountFilter) {
+			result = result.filter((e) => e.account === accountFilter || e.to_account === accountFilter);
+		}
+
+		if (searchQuery.trim()) {
+			const results = searchFuse.search(searchQuery).map((r) => r.item);
+			result = result.filter((e) => results.some((r) => r.id === e.id));
+		}
+
+		return result;
 	});
 
 	/**
@@ -357,8 +375,16 @@
 
 <div class="table-header-row">
 	<h1>Your Entries</h1>
-	{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
-		<div class="search-row" style="align-self: flex-end;">
+	<div class="search-row" style="align-self: flex-end;">
+		{#if data.accounts.length > 0 && data.entries.length !== 0}
+			<select bind:value={accountFilter} class="account-filter" aria-label="Filter by account">
+				<option value="">All Accounts</option>
+				{#each accountOptions as account (account.id)}
+					<option value={account.name}>{account.name}</option>
+				{/each}
+			</select>
+		{/if}
+		{#if possibleHeaders.filter((h) => h.selected && ["notes", "category", "description"].includes(h.header.key)).length > 0 && data.entries.length !== 0}
 			<div class="search-box">
 				<Search
 					size={14}
@@ -375,8 +401,8 @@
 					onfocus={() => searchInput.select()}
 				/>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 {#if data.entries.length === 0}
