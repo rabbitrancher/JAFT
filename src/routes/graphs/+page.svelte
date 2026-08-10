@@ -173,6 +173,13 @@
 				: (data.trendCards.byAccount[selectedAccountFilter] ?? data.trendCards.summary),
 	);
 
+	let filteredPopularDescriptions = $derived(
+		selectedAccountFilter === null
+			? data.popularDescriptions.combined
+			: isAccountType(selectedAccountFilter)
+				? (data.popularDescriptions.byAccountType[selectedAccountFilter] ?? [])
+				: (data.popularDescriptions.byAccount[selectedAccountFilter] ?? []),
+	);
 	/**
 	 * Helper method to display text on the cards depending on the view
 	 */
@@ -398,6 +405,6 @@
 	<!-- Popular Descriptions grid -->
 	<div class="chart-section">
 		<h2>Popular Descriptions</h2>
-		<PopularDescriptions descriptions={data.popularDescriptions} />
+		<PopularDescriptions descriptions={filteredPopularDescriptions} />
 	</div>
 {/if}

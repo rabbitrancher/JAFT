@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
 import { accounts, categories, entries } from "$lib/server/db/schema";
-import { and, asc, count, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, ne, sql } from "drizzle-orm";
 import type {
 	MoneyMovement,
 	DataPoint,
@@ -571,32 +571,75 @@ async function getSpendingTrends() {
 }
 
 /**
- * Retrieves the most common entry descriptions.
+ * Retrieves the most frequently occurring expense descriptions across all accounts.
  *
- * This function queries the database for entry descriptions, counts and sums
- * their occurrences, and returns them in descending order of frequency.
+ * This function queries the database for all entries with non-empty descriptions,
+ * then aggregates the results by description, counting occurrences and summing
+ * amounts per description. The results are returned as a combined list, plus
+ * separate lists per account and per account type.
  *
- * @param limit The maximum number of results to return (default: 10)
- * @returns A promise resolving to an array of PopularDescription objects
+ * @param limit The maximum number of descriptions to return in each list (default: 10)
+ * @returns A promise resolving to an object containing the combined popular descriptions,
+ * plus popular descriptions by account and by account type.
  */
 async function getPopularDescriptions(limit = 10) {
-	const results = await db
+	const rows = await db
 		.select({
 			description: entries.description,
-			count: count(entries.id),
-			total: sql<number>`sum(${entries.amount})`,
+			amount: entries.amount,
+			accountId: entries.account_id,
+			accountType: accounts.type,
 		})
 		.from(entries)
-		.where(and(isNotNull(entries.description), ne(entries.description, "")))
-		.groupBy(entries.description)
-		.orderBy(desc(count(entries.id)))
-		.limit(limit);
+		.leftJoin(accounts, eq(entries.account_id, accounts.id))
+		.where(and(isNotNull(entries.description), ne(entries.description, "")));
 
-	return results.map((r) => ({
-		description: r.description as string,
-		count: r.count,
-		total: Math.abs(r.total),
-	})) satisfies PopularDescription[];
+	type DescriptionRow = (typeof rows)[number];
+
+	/**
+	 * Aggregates a set of description rows into ranked PopularDescription
+	 * entries, counting occurrences and summing amounts per description.
+	 *
+	 * @param rowsToAggregate The description rows to aggregate
+	 * @returns The aggregated PopularDescription entries
+	 */
+	function computePopularDescriptions(rowsToAggregate: DescriptionRow[]): PopularDescription[] {
+		const stats = new Map<string, { count: number; total: number }>();
+
+		rowsToAggregate.forEach((r) => {
+			if (!r.description) return;
+
+			const entry = stats.get(r.description) ?? { count: 0, total: 0 };
+			entry.count += 1;
+			entry.total += r.amount;
+			stats.set(r.description, entry);
+		});
+
+		return Array.from(stats, ([description, { count, total }]) => ({
+			description,
+			count,
+			total: Math.abs(total),
+		}))
+			.sort((a, b) => b.count - a.count)
+			.slice(0, limit);
+	}
+
+	const combined = computePopularDescriptions(rows);
+
+	const byAccount: Record<AccountId, PopularDescription[]> = {};
+	const accountIds = new Set(
+		rows.map((r) => r.accountId).filter((id): id is AccountId => id !== null),
+	);
+	accountIds.forEach((id) => {
+		byAccount[id] = computePopularDescriptions(rows.filter((r) => r.accountId === id));
+	});
+
+	const byAccountType = {} as Record<AccountType, PopularDescription[]>;
+	accountTypes.forEach((type) => {
+		byAccountType[type] = computePopularDescriptions(rows.filter((r) => r.accountType === type));
+	});
+
+	return { combined, byAccount, byAccountType };
 }
 
 /**
