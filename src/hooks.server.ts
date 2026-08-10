@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
 import { categories } from "$lib/server/db/schema";
-import { BASE_CATEGORIES } from "$lib/categories";
+import { BASE_CATEGORIES } from "$lib/types/categories";
 
 console.log("Setting up database...");
 // seed categories by adding the possible categories to the table used to enforce limited category options.

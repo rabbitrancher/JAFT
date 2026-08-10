@@ -1,4 +1,5 @@
-import type { AccountType } from "$lib/accounts";
+import type { AccountId, AccountType } from "$lib/types/accounts";
+import type { TransactionType } from "../entries";
 
 /**
  * Represents a point on a chart with a date string x-axis and a numeric y-axis.
@@ -21,8 +22,6 @@ export type TimeRange = "all" | "month" | "year";
 
 export type DateString = string;
 
-export type AccountId = number;
-
 export type Balance = number;
 
 export type BalanceChange = number;
@@ -30,20 +29,9 @@ export type BalanceChange = number;
 export type DailyBalanceChanges = Record<DateString, BalanceChange>;
 
 /**
- * Represents the net worth chart: the combined line across all accounts, plus
- * the same running-balance line computed for each individual account, so the
- * client can switch between "all accounts" and a single account without a
- * refetch.
+ * Represents the type of a cash flow, either an income or an expense. Transfers are not included, since those do not add / take away money from the total value of all accounts.
  */
-export interface NetWorthChart {
-	points: DataPoint[];
-	byAccount: Record<AccountId, DataPoint[]>;
-	byAccountType: Record<AccountType, DataPoint[]>;
-	byTypePerAccount: Record<AccountType, Record<AccountId, DataPoint[]>>;
-}
-
-export type TransactionType = "income" | "expense";
-
+export type CashFlowType = Exclude<TransactionType, "transfer">;
 /**
  * Represents a point on the category chart with a date string x-axis, a numeric
  * y-axis, and a category label.
@@ -64,7 +52,7 @@ export interface CategoryPoint {
 	/**
 	 * The type of transaction, either an income or an expense.
 	 */
-	transactionType: TransactionType;
+	cashFlowType: CashFlowType;
 	/**
 	 * The account this entry belongs to, so the client can filter to a single
 	 * account.
@@ -91,7 +79,7 @@ export interface MoneyMovement {
  * Represents a summary of the current financial state, including net worth and
  * income/expense totals.
  */
-export interface Summary {
+export interface FinancialSummary {
 	/**
 	 * The current net worth.
 	 */
@@ -161,12 +149,6 @@ export interface TrendSummary {
 	biggestExpense: { description: string | null; amount: number } | null;
 }
 
-export interface PopularDescription {
-	description: string;
-	count: number;
-	total: number;
-}
-
 /**
  * Represents an account's current balance, derived from its starting balance
  * plus every entry that has moved money into or out of it (including
@@ -182,17 +164,3 @@ export interface AccountBalance {
 
 export type AccountSeries = { id: AccountId; name: string; points: DataPoint[] };
 export type AccountTypeSeries = { type: AccountType; name: string; points: DataPoint[] };
-
-export type NetWorthChartProps = {
-	points: DataPoint[];
-	timeRange?: TimeRange;
-	accountSeries?: AccountSeries[] | null;
-	accountTypeSeries?: AccountTypeSeries[] | null;
-	byTypePerAccount?: Record<AccountType, Record<AccountId, DataPoint[]>> | null;
-	selectedAccountType?: AccountType | null;
-};
-
-export type CategoryChartProps = {
-	points: CategoryPoint[];
-	timeRange?: TimeRange;
-};

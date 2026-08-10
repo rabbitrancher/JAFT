@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatCurrency } from "$lib/utils/format";
-	import type { AccountBalance } from "./graphContainers";
+	import type { AccountBalance } from "$lib/types/graphs/types";
 
 	let { accounts } = $props<{ accounts: AccountBalance[] }>();
 </script>

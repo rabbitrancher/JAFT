@@ -1,4 +1,4 @@
-import { toTitleCase } from "./utils/format";
+import { toTitleCase } from "../utils/format";
 
 /**
  * An array of all possible column keys in the table.

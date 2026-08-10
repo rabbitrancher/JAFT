@@ -2,7 +2,12 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
 import { entries, categories, accounts } from "$lib/server/db/schema";
 import { eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { toTitleCase, toSentenceCase } from "$lib/utils/format";
+import type { TransactionType } from "$lib/types/entries";
+
+const account = alias(accounts, "account");
+const toAccount = alias(accounts, "to_account");
 
 /**
  * Updates an existing entry.
@@ -24,7 +29,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 	 *   updates: {
 	 *     date?: string;
 	 *     amount?: number;
-	 *     type?: "income" | "expense" | "transfer";
+	 *     type?: TransactionType;
 	 *     account?: string;
 	 *     to_account?: string;
 	 *     category?: string;
@@ -38,7 +43,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		updates: {
 			date?: string;
 			amount?: number;
-			type?: "income" | "expense" | "transfer";
+			type?: TransactionType;
 			account?: string;
 			to_account?: string;
 			category?: string;
@@ -138,7 +143,26 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		return json({ error: "Entry not found" }, { status: 404 });
 	}
 
-	return json({ success: true });
+	const updatedEntry = await db
+		.select({
+			id: entries.id,
+			date: entries.date,
+			amount: entries.amount,
+			type: entries.type,
+			account: account.name,
+			to_account: toAccount.name,
+			category: categories.name,
+			description: entries.description,
+			notes: entries.notes,
+		})
+		.from(entries)
+		.leftJoin(categories, eq(entries.category_id, categories.id))
+		.leftJoin(account, eq(entries.account_id, account.id))
+		.leftJoin(toAccount, eq(entries.to_account_id, toAccount.id))
+		.where(eq(entries.id, id))
+		.get();
+
+	return json(updatedEntry);
 };
 
 /**

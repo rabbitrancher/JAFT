@@ -1,22 +1,8 @@
-import { db } from "$lib/server/db";
-import { entries as entriesTable } from "$lib/server/db/schema";
-import { isNotNull } from "drizzle-orm";
 import type { accounts, categories } from "$lib/server/db/schema";
+import type { Entry } from "$lib/types/entries";
 
 type Account = typeof accounts.$inferSelect;
 type Category = typeof categories.$inferSelect;
-
-type Entry = {
-	id: number;
-	date: string;
-	amount: number;
-	type: "income" | "expense" | "transfer";
-	account: string | null;
-	to_account: string | null;
-	category: string | null;
-	description: string | null;
-	notes: string | null;
-};
 
 /**
  * Loads the necessary data for the application, including entries, accounts, categories, and past descriptions.
@@ -33,15 +19,18 @@ export async function load({ fetch }) {
 		fetch("/api/categories").then((r) => r.json()),
 	]);
 
-	const pastDescriptions = await db
-		.selectDistinct({ description: entriesTable.description })
-		.from(entriesTable)
-		.where(isNotNull(entriesTable.description));
+	const pastDescriptions = [
+		...new Set(
+			entries
+				.map((entry) => entry.description)
+				.filter((description): description is string => description !== null),
+		),
+	];
 
 	return {
 		entries,
 		accounts: allAccounts,
 		categories: categories.map((c) => c.name),
-		descriptions: pastDescriptions.map((d) => d.description as string),
+		descriptions: pastDescriptions,
 	};
 }

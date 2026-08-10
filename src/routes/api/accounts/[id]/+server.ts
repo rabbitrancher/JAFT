@@ -1,8 +1,6 @@
-
-
-import { isAccountType, type AccountType } from "$lib/accounts";
 import { db } from "$lib/server/db";
 import { accounts, entries } from "$lib/server/db/schema";
+import { isAccountType, type AccountType } from "$lib/types/accounts";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { or, eq, and, ne } from "drizzle-orm";
 
@@ -56,7 +54,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 			...(body.archived !== undefined && { archived: body.archived }),
 		})
 		.where(eq(accounts.id, id))
-		.returning({ updatedID: accounts.id });
+		.returning();
 
 	if (result.length === 0) {
 		return new Response(JSON.stringify({ success: false, error: "Account not found" }), {
@@ -64,7 +62,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		});
 	}
 
-	return json({ success: true });
+	return json(result[0]);
 };
 
 /**

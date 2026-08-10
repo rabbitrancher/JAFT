@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { toSentenceCase, toTitleCase } from "$lib/utils/format";
+import type { TransactionType } from "$lib/types/entries";
 
 const account = alias(accounts, "account");
 const toAccount = alias(accounts, "to_account");
@@ -48,7 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const body = (await request.json()) as {
 		date: string;
 		amount: number;
-		type: "income" | "expense" | "transfer";
+		type: TransactionType;
 		account: number;
 		to_account?: number;
 		category?: string;

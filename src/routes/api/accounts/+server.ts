@@ -42,7 +42,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		.insert(accounts)
 		.values({ name: body.name })
 		.onConflictDoNothing({ target: accounts.name })
-		.returning({ insertedId: accounts.id });
+		.returning();
 
 	if (result.length === 0) {
 		// if nothing was returned, nothing was inserted (the name already existed), meaning there was an error
@@ -50,5 +50,5 @@ export const POST: RequestHandler = async ({ request }) => {
 			status: 409,
 		});
 	}
-	return json({ success: true });
+	return json(result[0]);
 };

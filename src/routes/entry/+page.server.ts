@@ -16,7 +16,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 
 		const amount = Number(formData.get("amount"));
-		const type = String(formData.get("type")) as "income" | "expense" | "transfer";
+		const type = String(formData.get("type")) as TransactionType;
 		const accountId = Number(formData.get("account"));
 
 		const toAccountData = formData.get("target-account");
