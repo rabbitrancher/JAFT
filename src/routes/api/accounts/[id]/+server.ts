@@ -1,19 +1,4 @@
-/**
- * This module provides API endpoints for updating and deleting accounts.
- *
- * The PATCH endpoint updates an existing account with new information,
- * while the DELETE endpoint removes an account from the database.
- *
- * Both endpoints take an `id` parameter, which specifies the account to be updated or deleted.
- *
- * The PATCH endpoint also takes a JSON body with the updated account information,
- * including `name`, `type`, and `archived` fields.
- *
- * The DELETE endpoint checks if the account to be deleted is involved in any existing entries,
- * and returns an error if it is. Otherwise, it deletes the account from the database.
- *
- * @module accounts
- */
+
 
 import { isAccountType, type AccountType } from "$lib/accounts";
 import { db } from "$lib/server/db";
@@ -22,12 +7,11 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 import { or, eq, and, ne } from "drizzle-orm";
 
 /**
- * Updates an existing account with new information.
+ * Updates an existing account.
  *
- * @param {Object} params - The URL parameters, including the `id` of the account to be updated.
- * @param {Object} request - The HTTP request object, which contains the updated account information in its JSON body.
- *
- * @returns {Response} A JSON response with a success message or an error message if the update fails.
+ * @param {Object} params - The URL parameters containing the account `id`.
+ * @param {Object} request - The HTTP request containing the updated account information.
+ * @returns {Response} A JSON response indicating whether the update was successful.
  */
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const id = Number(params.id);
@@ -84,11 +68,10 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 };
 
 /**
- * Deletes an existing account from the database.
+ * Deletes an existing account.
  *
- * @param {Object} params - The URL parameters, including the `id` of the account to be deleted.
- *
- * @returns {Response} A JSON response with a success message or an error message if the deletion fails.
+ * @param {Object} params - The URL parameters containing the account `id`.
+ * @returns {Response} A JSON response indicating whether the deletion was successful.
  */
 export const DELETE: RequestHandler = async ({ params }) => {
 	const id = Number(params.id);

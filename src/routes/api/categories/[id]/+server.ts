@@ -4,6 +4,12 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 import { eq, ne, and } from "drizzle-orm";
 import { toTitleCase } from "$lib/utils/format";
 
+/**
+ * Retrieves a category by ID.
+ *
+ * @param {Object} params - The URL parameters containing the category `id`.
+ * @returns {Response} A JSON response containing the category or an error response.
+ */
 export const GET: RequestHandler = async ({ params }) => {
 	const id = Number(params.id);
 	if (!Number.isInteger(id) || id <= 0) {
@@ -19,9 +25,13 @@ export const GET: RequestHandler = async ({ params }) => {
 };
 
 /**
- * Renames a category.
+ * Renames an existing category.
  *
- * **IS NOT CURRENTLY USED.**
+ * @param {Object} params - The URL parameters containing the category `id`.
+ * @param {Object} request - The HTTP request containing the updated category information.
+ * @returns {Response} A JSON response indicating whether the rename was successful.
+ *
+ * @remarks This endpoint is not currently used.
  */
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const id = Number(params.id);
@@ -59,8 +69,12 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 };
 
 /**
- * Deletes a category, provided it isn't tied to any existing entries.
- * **IS NOT CURRENTLY USED.**
+ * Deletes an existing category if it is not tied to any entries.
+ *
+ * @param {Object} params - The URL parameters containing the category `id`.
+ * @returns {Response} A JSON response indicating whether the deletion was successful.
+ *
+ * @remarks This endpoint is not currently used.
  */
 export const DELETE: RequestHandler = async ({ params }) => {
 	const id = Number(params.id);

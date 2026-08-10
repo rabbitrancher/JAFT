@@ -4,13 +4,9 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 
 /**
- * Handles GET requests to retrieve a list of accounts.
+ * Retrieves all accounts, optionally filtered by archived status.
  *
- * @param {Request} request - The incoming request object.
- *
- * @returns {Response} A JSON response containing a list of accounts.
- *
- * @throws {Response} No defined errors, but may throw internal server errors.
+ * @returns {Response} A JSON response containing the accounts.
  */
 export const GET: RequestHandler = async ({ url }) => {
 	const archivedParam = url.searchParams.get("archived");
@@ -27,14 +23,10 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 /**
- * Handles the creation of a new account via a POST request.
+ * Creates a new account.
  *
- * @param {Request} request - The incoming request object.
- *
+ * @param {Request} request - The incoming request containing the account information.
  * @returns {Response} A JSON response indicating whether the account creation was successful.
- *
- * @throws {Response} A 400 error response if the request body is missing the required 'name' field.
- * @throws {Response} A 409 error response if the account name already exists.
  */
 export const POST: RequestHandler = async ({ request }) => {
 	const body = (await request.json()) as {

@@ -9,8 +9,10 @@ const account = alias(accounts, "account");
 const toAccount = alias(accounts, "to_account");
 
 /**
- * Retrieves all entries, including their corresponding account/category names,
+ * Retrieves all entries, including their corresponding account and category names,
  * sorted by date in descending order.
+ *
+ * @returns {Response} A JSON response containing the entries.
  */
 export const GET: RequestHandler = async () => {
 	const allEntries = await db
@@ -35,23 +37,12 @@ export const GET: RequestHandler = async () => {
 };
 
 /**
- * Handles POST requests to create a new entry.
+ * Creates a new entry.
  *
- * Expects a JSON body with the following properties:
- * - date: The date of the entry (string)
- * - amount: The amount of the entry (number)
- * - type: The type of the entry ("income", "expense", or "transfer")
- * - account: The ID of the account the entry belongs to (number)
- * - to_account: The ID of the target account for transfers (number, optional)
- * - category: The name of the category the entry belongs to (string, optional)
- * - description: A brief description of the entry (string, optional)
- * - notes: Additional notes for the entry (string, optional)
- * - allowNewCategories: Whether to create a new category if it doesn't exist (boolean, optional)
+ * @param {Request} request - The incoming request containing the entry information.
+ * @returns {Response} A JSON response indicating whether the entry was created.
  *
- * **NOTE THAT THE /ENTRY PAGE DOES NOT CURRENTLY USE THIS ENDPOINT. IT IS FOR POSSIBLE FUTURE USAGE.**
- *
- * Returns a JSON response with a success message and a 201 status code if the entry is created successfully.
- * Returns a JSON response with an error message and a 400 status code if there are any validation errors.
+ * @remarks The `/entry` page does not currently use this endpoint. It is for possible future usage.
  */
 export const POST: RequestHandler = async ({ request }) => {
 	const body = (await request.json()) as {

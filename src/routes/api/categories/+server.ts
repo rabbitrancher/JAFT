@@ -6,6 +6,8 @@ import { toTitleCase } from "$lib/utils/format";
 
 /**
  * Retrieves all categories, sorted alphabetically.
+ *
+ * @returns {Response} A JSON response containing the categories.
  */
 export const GET: RequestHandler = async () => {
 	const sortedCategories = await db.selectDistinct().from(categories).orderBy(asc(categories.name));
@@ -13,7 +15,10 @@ export const GET: RequestHandler = async () => {
 };
 
 /**
- * Creates a new category. Names are normalized to Title Case.
+ * Creates a new category with a normalized name.
+ *
+ * @param {Request} request - The incoming request containing the category information.
+ * @returns {Response} A JSON response indicating whether the category was created.
  */
 export const POST: RequestHandler = async ({ request }) => {
 	const body = (await request.json()) as { name?: string };

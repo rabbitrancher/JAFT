@@ -5,11 +5,11 @@ import { eq } from "drizzle-orm";
 import { toTitleCase, toSentenceCase } from "$lib/utils/format";
 
 /**
- * Handles a PATCH request to update an existing entry.
+ * Updates an existing entry.
  *
- * @param {Object} params - The request parameters, including the id of the entry to update.
- * @param {Object} request - The HTTP request object.
- * @returns A JSON response indicating success or failure.
+ * @param {Object} params - The URL parameters containing the entry `id`.
+ * @param {Object} request - The HTTP request containing the entry updates.
+ * @returns {Response} A JSON response indicating whether the update was successful.
  */
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const id = Number(params.id);
@@ -142,10 +142,10 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 };
 
 /**
- * Handles a DELETE request to delete an entry by id.
+ * Deletes an existing entry.
  *
- * @param {Object} params - The request parameters, including the id of the entry to delete.
- * @returns A JSON response indicating success or failure.
+ * @param {Object} params - The URL parameters containing the entry `id`.
+ * @returns {Response} A JSON response indicating whether the deletion was successful.
  */
 export const DELETE: RequestHandler = async ({ params }) => {
 	const id = Number(params.id);
