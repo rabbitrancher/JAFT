@@ -1,49 +1,47 @@
 import { db } from "$lib/server/db";
-import { entries, categories, accounts } from "$lib/server/db/schema";
-import { asc, desc, eq, isNotNull } from "drizzle-orm";
-import { alias } from "drizzle-orm/sqlite-core";
+import { entries as entriesTable } from "$lib/server/db/schema";
+import { isNotNull } from "drizzle-orm";
+import type { accounts, categories } from "$lib/server/db/schema";
 
-const account = alias(accounts, "account");
-const toAccount = alias(accounts, "to_account");
+type Account = typeof accounts.$inferSelect;
+type Category = typeof categories.$inferSelect;
+
+type Entry = {
+	id: number;
+	date: string;
+	amount: number;
+	type: "income" | "expense" | "transfer";
+	account: string | null;
+	to_account: string | null;
+	category: string | null;
+	description: string | null;
+	notes: string | null;
+};
 
 /**
- * Retrieves all entries from the database, including their corresponding category names, sorted by date in descending order.
- * Also returns all possible categories and previous descriptions for fuzzy assist during editing.
+ * Loads the necessary data for the application, including entries, accounts, categories, and past descriptions.
  *
- * @returns An array of objects containing entry information, an array of strings of all stored category names, and an array of strings storing all past description.
+ * @param {Object} params - Parameters for the load function.
+ * @param {Function} params.fetch - A function to fetch data from the API.
+ *
+ * @returns {Promise<Object>} A promise that resolves with an object containing the loaded data.
  */
-export async function load() {
-	const allEntries = await db
-		.select({
-			id: entries.id,
-			date: entries.date,
-			amount: entries.amount,
-			type: entries.type,
-			account: account.name,
-			to_account: toAccount.name,
-			category: categories.name,
-			description: entries.description,
-			notes: entries.notes,
-		})
-		.from(entries)
-		.leftJoin(categories, eq(entries.category_id, categories.id))
-		.leftJoin(account, eq(entries.account_id, account.id))
-		.leftJoin(toAccount, eq(entries.to_account_id, toAccount.id))
-		.orderBy(desc(entries.date));
-
-	const allActiveAccounts = await db.select().from(accounts).where(eq(accounts.archived, false));
-
-	const sortedCategories = await db.selectDistinct().from(categories).orderBy(asc(categories.name));
+export async function load({ fetch }) {
+	const [entries, allAccounts, categories]: [Entry[], Account[], Category[]] = await Promise.all([
+		fetch("/api/entries").then((r) => r.json()),
+		fetch("/api/accounts?archived=false").then((r) => r.json()),
+		fetch("/api/categories").then((r) => r.json()),
+	]);
 
 	const pastDescriptions = await db
-		.selectDistinct({ description: entries.description })
-		.from(entries)
-		.where(isNotNull(entries.description));
+		.selectDistinct({ description: entriesTable.description })
+		.from(entriesTable)
+		.where(isNotNull(entriesTable.description));
 
 	return {
-		entries: allEntries,
-		accounts: allActiveAccounts,
-		categories: sortedCategories.map((c) => c.name),
+		entries,
+		accounts: allAccounts,
+		categories: categories.map((c) => c.name),
 		descriptions: pastDescriptions.map((d) => d.description as string),
 	};
 }

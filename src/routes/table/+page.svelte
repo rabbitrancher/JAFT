@@ -286,11 +286,10 @@
 		if (curEditId === null || editValues === null) {
 			return true;
 		}
-		const result = await fetch("/table", {
+		const result = await fetch(`/api/entries/${curEditId}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				id: curEditId,
 				updates: editValues,
 				allowNewCategories: !categoriesEnforced,
 			}),
@@ -336,12 +335,9 @@
 		if (curEditId === null || editValues === null) {
 			return true;
 		}
-		const result = await fetch("/table", {
+		const result = await fetch(`/api/entries/${pendingDeleteId}`, {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				id: pendingDeleteId,
-			}),
 		});
 		const json = await result.json();
 		if (!result.ok) {

@@ -1,25 +1,39 @@
-import { json } from "@sveltejs/kit";
+import { json, type RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
 import { entries, categories, accounts } from "$lib/server/db/schema";
 import { eq } from "drizzle-orm";
 import { toTitleCase, toSentenceCase } from "$lib/utils/format";
-import type { RequestHandler } from "./$types";
 
 /**
- * Updates an existing entry in the database.
- * Only fields provided in the request body will be updated (partial update).
+ * Updates an existing entry.
  *
- * - Category is validated against the categories table and stored as a foreign key
- * - If allowNewCategories is true, new categories are inserted instead of rejected
- * - Text fields are normalized (title case for category, sentence case for description)
- * - Only known fields are written to the DB to prevent malicious field injection
- *
- * @returns { success: true } on success
- * @returns { error: string } with status 400 on validation failure
+ * @param {Object} params - The URL parameters containing the entry `id`.
+ * @param {Object} request - The HTTP request containing the entry updates.
+ * @returns {Response} A JSON response indicating whether the update was successful.
  */
-export const PATCH: RequestHandler = async ({ request }) => {
+export const PATCH: RequestHandler = async ({ params, request }) => {
+	const id = Number(params.id);
+	if (!Number.isInteger(id) || id <= 0) {
+		return json({ error: "Invalid id" }, { status: 400 });
+	}
+
+	/**
+	 * The request body is expected to be in the following format:
+	 * {
+	 *   allowNewCategories: boolean;
+	 *   updates: {
+	 *     date?: string;
+	 *     amount?: number;
+	 *     type?: "income" | "expense" | "transfer";
+	 *     account?: string;
+	 *     to_account?: string;
+	 *     category?: string;
+	 *     description?: string;
+	 *     notes?: string;
+	 *   };
+	 * }
+	 */
 	const body = (await request.json()) as {
-		id: number;
 		allowNewCategories: boolean;
 		updates: {
 			date?: string;
@@ -33,13 +47,11 @@ export const PATCH: RequestHandler = async ({ request }) => {
 		};
 	};
 
-	const { id, updates, allowNewCategories } = body;
+	const { updates, allowNewCategories } = body;
 
-	if (!id || typeof id !== "number") {
-		return json({ error: "Invalid id" }, { status: 400 });
-	}
-
-	// build a safe update object by making sure only explicitly handled fields can make it to the db
+	/**
+	 * Create a new object to store the safe updates, to prevent unauthorized data from being updated.
+	 */
 	const safeUpdates: Record<string, unknown> = {};
 
 	if (updates.date) {
@@ -116,24 +128,36 @@ export const PATCH: RequestHandler = async ({ request }) => {
 		safeUpdates.category_id = category.id;
 	}
 
-	await db.update(entries).set(safeUpdates).where(eq(entries.id, id));
+	const result = await db
+		.update(entries)
+		.set(safeUpdates)
+		.where(eq(entries.id, id))
+		.returning({ id: entries.id });
+
+	if (result.length === 0) {
+		return json({ error: "Entry not found" }, { status: 404 });
+	}
 
 	return json({ success: true });
 };
 
 /**
- * Deletes an existing entry in the database.
+ * Deletes an existing entry.
  *
- * @returns { success: true } on success
- * @returns { error: string } with status 400 on validation failure
+ * @param {Object} params - The URL parameters containing the entry `id`.
+ * @returns {Response} A JSON response indicating whether the deletion was successful.
  */
-export const DELETE: RequestHandler = async ({ request }) => {
-	const body = (await request.json()) as { id: number };
-	const { id } = body;
-	if (!id || typeof id !== "number") {
+export const DELETE: RequestHandler = async ({ params }) => {
+	const id = Number(params.id);
+	if (!Number.isInteger(id) || id <= 0) {
 		return json({ error: "Invalid id" }, { status: 400 });
 	}
 
-	await db.delete(entries).where(eq(entries.id, id));
+	const result = await db.delete(entries).where(eq(entries.id, id)).returning({ id: entries.id });
+
+	if (result.length === 0) {
+		return json({ error: "Entry not found" }, { status: 404 });
+	}
+
 	return json({ success: true });
 };
