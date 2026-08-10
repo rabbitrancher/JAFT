@@ -108,11 +108,10 @@
 	let accountError = $state<string | null>(null);
 
 	async function archive(account: (typeof data.allAccounts)[number]) {
-		const result = await fetch("/settings", {
+		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				id: account.id,
 				archived: true,
 			}),
 		});
@@ -128,11 +127,10 @@
 	}
 
 	async function saveAccount(account: (typeof data.allAccounts)[number]) {
-		const result = await fetch("/settings", {
+		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				id: account.id,
 				name: editingAccount.name,
 				type: editingAccount.type,
 			}),
@@ -147,7 +145,7 @@
 	}
 
 	async function makeNewAccount() {
-		const result = await fetch("/settings", {
+		const result = await fetch(`/api/accounts`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -164,11 +162,10 @@
 	let archivedAccounts = $derived(data.allAccounts.filter((account) => account.archived));
 
 	async function unArchive(account: (typeof data.allAccounts)[number]) {
-		const result = await fetch("/settings", {
+		const result = await fetch(`/api/accounts/${account.id}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				id: account.id,
 				archived: false,
 			}),
 		});
@@ -190,12 +187,9 @@
 	}
 
 	async function confirmDelete(): Promise<boolean> {
-		const result = await fetch("/settings", {
+		const result = await fetch(`/api/accounts/${pendingDeleteId}`, {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				id: pendingDeleteId,
-			}),
 		});
 		const json = await result.json();
 		if (!result.ok) {
@@ -306,7 +300,7 @@
 				{#each archivedAccounts as account (account.id)}
 					<div class="account-card">
 						<span class="center-inside">
-							{#if pendingDeleteId}
+							{#if pendingDeleteId == account.id}
 								<span title="Confirm Delete">
 									<CircleCheckBig
 										class="clickable error"

@@ -1,14 +1,36 @@
+
+
+import { isAccountType, type AccountType } from "$lib/accounts";
 import { db } from "$lib/server/db";
 import { accounts, entries } from "$lib/server/db/schema";
-import { json } from "@sveltejs/kit";
-import { and, eq, ne, or } from "drizzle-orm";
-import type { RequestHandler } from "./$types";
+import { json, type RequestHandler } from "@sveltejs/kit";
+import { or, eq, and, ne } from "drizzle-orm";
 
-export const PATCH: RequestHandler = async ({ request }) => {
-	const body = await request.json();
+/**
+ * Updates an existing account.
+ *
+ * @param {Object} params - The URL parameters containing the account `id`.
+ * @param {Object} request - The HTTP request containing the updated account information.
+ * @returns {Response} A JSON response indicating whether the update was successful.
+ */
+export const PATCH: RequestHandler = async ({ params, request }) => {
+	const id = Number(params.id);
+	if (!Number.isInteger(id) || id <= 0) {
+		return json({ error: "Invalid id" }, { status: 400 });
+	}
+
+	const body = (await request.json()) as {
+		name: string;
+		type: AccountType;
+		archived: boolean;
+	};
 
 	if (body.name === "") {
 		return json({ error: "Please provide a valid account name" }, { status: 400 });
+	}
+
+	if (body.type !== undefined && !isAccountType(body.type)) {
+		return json({ error: "Invalid account type" }, { status: 400 });
 	}
 
 	// check if another account already has this name
@@ -16,7 +38,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
 		const existing = await db
 			.select()
 			.from(accounts)
-			.where(and(eq(accounts.name, body.name), ne(accounts.id, body.id)));
+			.where(and(eq(accounts.name, body.name), ne(accounts.id, id)));
 
 		if (existing.length > 0) {
 			return new Response(JSON.stringify({ success: false, error: "Name already taken" }), {
@@ -33,7 +55,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
 			...(body.type !== undefined && { type: body.type }),
 			...(body.archived !== undefined && { archived: body.archived }),
 		})
-		.where(eq(accounts.id, body.id))
+		.where(eq(accounts.id, id))
 		.returning({ updatedID: accounts.id });
 
 	if (result.length === 0) {
@@ -45,31 +67,15 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	return json({ success: true });
 };
 
-export const POST: RequestHandler = async ({ request }) => {
-	const body = (await request.json()) as {
-		name: string;
-	};
-
-	// returns the inserted account entry if one was created
-	const result = await db
-		.insert(accounts)
-		.values({ name: body.name })
-		.onConflictDoNothing({ target: accounts.name })
-		.returning({ insertedId: accounts.id });
-
-	if (result.length === 0) {
-		// if nothing was returned, nothing was inserted (the name already existed), meaning there was an error
-		return new Response(JSON.stringify({ success: false, error: "Name already taken" }), {
-			status: 409,
-		});
-	}
-	return json({ success: true });
-};
-
-export const DELETE: RequestHandler = async ({ request }) => {
-	const body = (await request.json()) as { id: number };
-	const { id } = body;
-	if (!id || typeof id !== "number") {
+/**
+ * Deletes an existing account.
+ *
+ * @param {Object} params - The URL parameters containing the account `id`.
+ * @returns {Response} A JSON response indicating whether the deletion was successful.
+ */
+export const DELETE: RequestHandler = async ({ params }) => {
+	const id = Number(params.id);
+	if (!Number.isInteger(id) || id <= 0) {
 		return json({ error: "Invalid id" }, { status: 400 });
 	}
 

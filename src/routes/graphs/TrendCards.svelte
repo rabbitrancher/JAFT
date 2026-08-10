@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TrendSummary } from "./+page.server";
 	import { formatCurrency, formatMonthLabel } from "$lib/utils/format";
+	import type { TrendSummary } from "./graphContainers";
 
 	let { summary } = $props<{ summary: TrendSummary }>();
 </script>

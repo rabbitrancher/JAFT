@@ -69,6 +69,20 @@ graphs page. Your very first time launching, you're be given a 'Main Account' to
 please in the settings page. Please note that accounts can only be deleted if they have no entries
 associated with them.
 
+## Security Note
+
+JAFT has no built-in authentication or user accounts — anyone who can reach the app can view and
+edit all the data. This is fine on a private network, but **don't expose it directly to the public
+internet** (e.g. via router port-forwarding or a public cloud IP) without putting something in front
+of it.
+
+If you want to access it remotely, put it behind:
+
+- A VPN/mesh network like [NetBird](https://netbird.io) or [Tailscale](https://tailscale.com), so
+  only your own devices can reach it, or
+- A reverse proxy (e.g. [Caddy](https://caddyserver.com) or nginx) with HTTP Basic Auth or another
+  login layer in front of the whole app.
+
 ## How Do I Use It?
 
 You actually want to? Awesome! There are a few ways to get this running, depending on how much you
@@ -141,6 +155,8 @@ docker compose up -d
 
 The app will be available at `http://your-ip:8389`. On first start, migrations and category seeding
 will run automatically, so there should be no manual setup needed.
+
+> See the [Security Note](#security-note) above before exposing this port beyond your local network.
 
 #### Updating
 
